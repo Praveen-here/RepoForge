@@ -1,0 +1,40 @@
+.resizer {
+  position: relative;
+  flex-shrink: 0;
+  background: var(--border-soft);
+  z-index: 5;
+  transition: background var(--transition);
+}
+
+/* Wider invisible hit area around the 1px line */
+.resizer::after {
+  content: '';
+  position: absolute;
+}
+
+.x {
+  width: 1px;
+  cursor: col-resize;
+}
+.x::after {
+  top: 0;
+  bottom: 0;
+  left: -4px;
+  right: -4px;
+}
+
+.y {
+  height: 1px;
+  cursor: row-resize;
+}
+.y::after {
+  left: 0;
+  right: 0;
+  top: -4px;
+  bottom: -4px;
+}
+
+.resizer:hover,
+.resizer:active {
+  background: var(--accent);
+}

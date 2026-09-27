@@ -1,0 +1,40 @@
+.shell {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg);
+}
+
+.body {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+}
+
+.explorer {
+  flex-shrink: 0;
+  min-width: 0;
+  border-right: 1px solid var(--border-soft);
+}
+
+.center {
+  flex: 1;
+  min-width: 320px;
+  display: flex;
+  flex-direction: column;
+}
+
+.editor {
+  flex: 1;
+  min-height: 120px;
+}
+
+.panel {
+  flex-shrink: 0;
+  min-height: 0;
+}
+
+.preview {
+  flex-shrink: 0;
+  min-width: 0;
+}

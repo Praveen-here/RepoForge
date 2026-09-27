@@ -1,0 +1,110 @@
+:root {
+  /* Surfaces */
+  --bg: #0b0d12;
+  --surface: #0f1218;
+  --surface-raised: #141821;
+  --surface-hover: #1a1f2a;
+  --surface-active: #202633;
+
+  /* Lines */
+  --border: #222834;
+  --border-soft: #191e28;
+
+  /* Text */
+  --text: #e4e7ee;
+  --text-muted: #939bad;
+  --text-faint: #5d6576;
+
+  /* Accent: muted gold */
+  --accent: #c9a45c;
+  --accent-strong: #ddb96f;
+  --accent-soft: rgba(201, 164, 92, 0.12);
+  --accent-ink: #1b1508;
+
+  /* Status */
+  --success: #56c292;
+  --success-soft: rgba(86, 194, 146, 0.12);
+  --danger: #e2646e;
+  --danger-soft: rgba(226, 100, 110, 0.12);
+  --warning: #e0b44a;
+  --info: #78a9f5;
+
+  --radius-sm: 6px;
+  --radius: 8px;
+  --radius-lg: 12px;
+
+  --shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+  --transition: 140ms ease;
+
+  color-scheme: dark;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-sans), system-ui, sans-serif;
+  font-size: 13px;
+  -webkit-font-smoothing: antialiased;
+  overflow: hidden;
+}
+
+button {
+  font: inherit;
+  color: inherit;
+}
+
+input {
+  font: inherit;
+}
+
+::selection {
+  background: rgba(201, 164, 92, 0.28);
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.07);
+  border-radius: 10px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.14);
+  background-clip: padding-box;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* While a pane is being resized, iframes must not swallow the pointer. */
+body.is-resizing {
+  user-select: none;
+}
+body.is-resizing iframe {
+  pointer-events: none;
+}
+body.is-resizing-x {
+  cursor: col-resize;
+}
+body.is-resizing-y {
+  cursor: row-resize;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

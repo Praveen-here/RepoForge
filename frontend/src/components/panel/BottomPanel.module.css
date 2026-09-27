@@ -1,0 +1,132 @@
+.panel {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  background: #0c0e13;
+}
+
+.header {
+  height: 36px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 12px 0 6px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border-soft);
+}
+
+.tabs {
+  display: flex;
+  height: 100%;
+}
+
+.tab {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  height: 100%;
+  padding: 0 12px;
+  border: none;
+  background: transparent;
+  color: var(--text-faint);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: color var(--transition);
+}
+
+.tab:hover {
+  color: var(--text-muted);
+}
+
+.tabActive,
+.tabActive:hover {
+  color: var(--text);
+}
+
+.tabActive::after {
+  content: '';
+  position: absolute;
+  left: 10px;
+  right: 10px;
+  bottom: 0;
+  height: 2px;
+  border-radius: 2px 2px 0 0;
+  background: var(--accent);
+}
+
+.badge {
+  padding: 1px 7px;
+  border-radius: 999px;
+  font-size: 10.5px;
+  font-weight: 600;
+}
+
+.badgeSuccess {
+  color: var(--success);
+  background: var(--success-soft);
+}
+
+.badgeDanger {
+  color: var(--danger);
+  background: var(--danger-soft);
+}
+
+.pulse {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--accent);
+  animation: pulse 1s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  50% {
+    opacity: 0.25;
+  }
+}
+
+.connection {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-faint);
+}
+
+.connectionDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--text-faint);
+}
+
+.connected .connectionDot {
+  background: var(--success);
+}
+
+.connecting .connectionDot {
+  background: var(--warning);
+}
+
+.disconnected .connectionDot {
+  background: var(--danger);
+}
+
+.body {
+  flex: 1;
+  min-height: 0;
+  position: relative;
+}
+
+.view {
+  position: absolute;
+  inset: 0;
+}
+
+.view[hidden] {
+  display: none;
+}

@@ -1,0 +1,22 @@
+{
+  "name": "repo-forge-backend",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Repo Forge API: sessions, files, terminal and grading for repo-level challenges",
+  "type": "module",
+  "main": "src/server.js",
+  "scripts": {
+    "dev": "node --env-file-if-exists=.env --watch src/server.js",
+    "start": "node --env-file-if-exists=.env src/server.js"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "dependencies": {
+    "cors": "^2.8.6",
+    "dockerode": "^5.0.1",
+    "express": "^5.2.1",
+    "tar-stream": "^3.2.1",
+    "ws": "^8.22.0"
+  }
+}

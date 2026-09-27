@@ -1,0 +1,146 @@
+.explorer {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  background: var(--surface);
+}
+
+.header {
+  height: 38px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 8px 0 14px;
+}
+
+.label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.section {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 14px 8px;
+}
+
+.sectionTitle {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.tree {
+  flex: 1;
+  overflow: auto;
+  padding-bottom: 12px;
+}
+
+.row {
+  position: relative;
+  height: 26px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding-right: 10px;
+  color: #c4c9d4;
+  cursor: pointer;
+  user-select: none;
+}
+
+.row:hover {
+  background: var(--surface-hover);
+  color: var(--text);
+}
+
+.active,
+.active:hover {
+  background: var(--accent-soft);
+  color: var(--text);
+}
+
+.active::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: var(--accent);
+}
+
+.chevron {
+  flex-shrink: 0;
+  color: var(--text-faint);
+  transition: transform var(--transition);
+}
+
+.chevronOpen {
+  transform: rotate(90deg);
+}
+
+.chevronSpacer {
+  width: 13px;
+  flex-shrink: 0;
+}
+
+.folder {
+  flex-shrink: 0;
+  color: #7f8aa0;
+  fill: rgba(127, 138, 160, 0.14);
+}
+
+.folderEditable {
+  color: var(--accent);
+  fill: var(--accent-soft);
+}
+
+.name {
+  flex: 1;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.dirty {
+  width: 7px;
+  height: 7px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: var(--accent);
+}
+
+.lock {
+  flex-shrink: 0;
+  color: var(--text-faint);
+}
+
+.error {
+  margin: 8px 14px;
+  color: var(--danger);
+}
+
+.legend {
+  flex-shrink: 0;
+  padding: 10px 14px;
+  border-top: 1px solid var(--border-soft);
+  font-size: 11px;
+  line-height: 1.5;
+  color: var(--text-faint);
+}
+
+.legend code {
+  font-family: var(--font-mono);
+  color: var(--text-muted);
+}
