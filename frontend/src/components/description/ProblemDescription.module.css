@@ -1,0 +1,122 @@
+.description {
+  height: 100%;
+  overflow: auto;
+  padding: 16px 20px 32px;
+}
+
+.title {
+  margin: 4px 0 12px;
+  font-size: 24px;
+  line-height: 32px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.pill {
+  height: 24px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0 10px;
+  border-radius: 9999px;
+  background: var(--fill-pill);
+  color: var(--text);
+  font-size: 12px;
+  line-height: 16px;
+}
+
+.difficultyEasy {
+  color: var(--easy);
+}
+.difficultyMedium {
+  color: var(--medium);
+}
+.difficultyHard {
+  color: var(--hard);
+}
+
+.loading {
+  display: flex;
+  justify-content: center;
+  padding: 32px 0;
+}
+
+.error {
+  color: var(--danger);
+}
+
+/* ---------- Rendered README ---------- */
+
+.content {
+  color: var(--text);
+  font-size: 14px;
+  line-height: 22px;
+}
+
+.content p {
+  margin: 0 0 16px;
+}
+
+.content h2 {
+  margin: 24px 0 10px;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.content h3 {
+  margin: 16px 0 8px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.content strong {
+  font-weight: 600;
+}
+
+.content ul,
+.content ol {
+  margin: 0 0 16px;
+  padding-left: 22px;
+}
+
+.content li {
+  margin: 6px 0;
+}
+
+.content li ul {
+  margin: 4px 0 0;
+}
+
+.content code {
+  padding: 1px 5px;
+  border: 1px solid rgba(247, 250, 255, 0.12);
+  border-radius: var(--radius-xs);
+  background: rgba(255, 255, 255, 0.07);
+  color: rgba(239, 241, 246, 0.85);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  line-height: 18px;
+}
+
+.content pre {
+  margin: 0 0 16px;
+  padding: 2px 0 2px 16px;
+  border-left: 2px solid rgba(255, 255, 255, 0.14);
+  white-space: pre-wrap;
+}
+
+.content pre code {
+  padding: 0;
+  border: none;
+  background: none;
+  font-size: 13px;
+  line-height: 20px;
+  color: rgba(239, 241, 246, 0.85);
+}

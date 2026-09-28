@@ -1,3 +1,4 @@
+import cookieParser from 'cookie-parser';
 import cors from 'cors';
 import express from 'express';
 import { config } from './config/index.js';
@@ -7,7 +8,9 @@ import routes from './routes/index.js';
 export function createApp() {
   const app = express();
 
-  app.use(cors({ origin: config.corsOrigin }));
+  // credentials: true lets the frontend send the login cookie with its requests.
+  app.use(cors({ origin: config.appUrl, credentials: true }));
+  app.use(cookieParser(config.auth.jwtSecret));
   app.use(express.json({ limit: '2mb' }));
 
   app.use('/api', routes);

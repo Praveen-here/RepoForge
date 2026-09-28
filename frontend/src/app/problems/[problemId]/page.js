@@ -1,3 +1,4 @@
+import RequireAuth from '@/components/auth/RequireAuth';
 import Workspace from '@/components/workspace/Workspace';
 
 export async function generateMetadata({ params }) {
@@ -7,5 +8,9 @@ export async function generateMetadata({ params }) {
 
 export default async function ProblemPage({ params }) {
   const { problemId } = await params;
-  return <Workspace problemId={problemId} />;
+  return (
+    <RequireAuth>
+      <Workspace problemId={problemId} />
+    </RequireAuth>
+  );
 }

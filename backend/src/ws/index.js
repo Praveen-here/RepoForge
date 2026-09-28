@@ -1,10 +1,12 @@
 import { WebSocketServer } from 'ws';
 import { config } from '../config/index.js';
+import { verifySessionToken } from '../services/authService.js';
 import { streamLogs } from '../services/logService.js';
 import { getSession } from '../services/sessionService.js';
 import { openTerminal } from '../services/terminalService.js';
+import { parseCookieHeader } from '../utils/cookies.js';
 
-// WebSocket endpoints:
+// WebSocket endpoints (the login cookie is checked, and the session must belong to the user):
 //   /ws/terminal?sessionId=...  interactive shell inside the session container
 //   /ws/logs?sessionId=...      live output of the app running in the container
 const handlers = {
@@ -26,11 +28,15 @@ export function attachWebSockets(server) {
     if (!handler) return reject(socket, 404, 'Not Found');
 
     const origin = req.headers.origin;
-    if (origin && origin !== config.corsOrigin) return reject(socket, 403, 'Forbidden');
+    if (origin && origin !== config.appUrl) return reject(socket, 403, 'Forbidden');
+
+    const cookies = parseCookieHeader(req.headers.cookie);
+    const userId = verifySessionToken(cookies[config.auth.cookieName]);
+    if (!userId) return reject(socket, 401, 'Unauthorized');
 
     let session;
     try {
-      session = getSession(url.searchParams.get('sessionId'));
+      session = getSession(url.searchParams.get('sessionId'), userId);
     } catch {
       return reject(socket, 404, 'Session Not Found');
     }

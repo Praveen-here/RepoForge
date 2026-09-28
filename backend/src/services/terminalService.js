@@ -1,5 +1,4 @@
 import { StringDecoder } from 'node:string_decoder';
-import { getProblem } from '../config/problems.js';
 import { getSessionContainer } from './sessionService.js';
 
 // Browser terminal <-> WebSocket <-> `docker exec -it <container> sh`
@@ -25,7 +24,7 @@ function parse(raw) {
 }
 
 export async function openTerminal(ws, session) {
-  const problem = getProblem(session.problemId);
+  const { problem } = session;
   const container = getSessionContainer(session);
 
   // The browser sends its size as soon as the socket opens, before the shell

@@ -1,59 +1,51 @@
 'use client';
 
 import { useState } from 'react';
-import Icon from '@/components/ui/Icon';
+import Button from '@/components/ui/Button';
+import PanelHeader from '@/components/ui/PanelHeader';
 import TestResults from '@/components/results/TestResults';
 import TerminalView from '@/components/terminal/TerminalView';
 import { socketUrl } from '@/lib/api';
 import styles from './BottomPanel.module.css';
 
-const TABS = [
-  { id: 'terminal', label: 'Terminal', icon: 'terminal' },
-  { id: 'logs', label: 'App Logs', icon: 'logs' },
-  { id: 'results', label: 'Test Results', icon: 'beaker' },
-];
-
-const VERDICT_BADGE = {
-  accepted: { label: 'Passed', className: 'badgeSuccess' },
-  failed: { label: 'Failed', className: 'badgeDanger' },
-  error: { label: 'Error', className: 'badgeDanger' },
-  timeout: { label: 'Timeout', className: 'badgeDanger' },
+const VERDICT_DOT = {
+  accepted: 'dotSuccess',
+  failed: 'dotDanger',
+  error: 'dotDanger',
+  timeout: 'dotDanger',
 };
 
-export default function BottomPanel({ sessionId, activeTab, onTabChange, submission, onTerminalReady }) {
+export default function BottomPanel({ sessionId, activeTab, onTabChange, submission, onTerminalReady, onClose }) {
   const [terminalStatus, setTerminalStatus] = useState('connecting');
-  const verdict = submission.result && VERDICT_BADGE[submission.result.status];
+
+  const resultDot =
+    submission.status === 'running'
+      ? styles.dotPending
+      : submission.result && styles[VERDICT_DOT[submission.result.status]];
+
+  const tabs = [
+    { id: 'terminal', label: 'Terminal', icon: 'terminal', iconColor: 'var(--icon-green)' },
+    { id: 'logs', label: 'App Logs', icon: 'logs', iconColor: 'var(--icon-blue)' },
+    {
+      id: 'results',
+      label: 'Test Result',
+      icon: 'checkSquare',
+      iconColor: 'var(--icon-green)',
+      badge: resultDot && <span className={`${styles.dot} ${resultDot}`} />,
+    },
+  ];
 
   return (
     <div className={styles.panel}>
-      <div className={styles.header}>
-        <div className={styles.tabs} role="tablist">
-          {TABS.map((tab) => (
-            <button
-              key={tab.id}
-              type="button"
-              role="tab"
-              aria-selected={activeTab === tab.id}
-              className={`${styles.tab} ${activeTab === tab.id ? styles.tabActive : ''}`}
-              onClick={() => onTabChange(tab.id)}
-            >
-              <Icon name={tab.icon} size={14} />
-              {tab.label}
-              {tab.id === 'results' && submission.status === 'running' && <span className={styles.pulse} />}
-              {tab.id === 'results' && verdict && (
-                <span className={`${styles.badge} ${styles[verdict.className]}`}>{verdict.label}</span>
-              )}
-            </button>
-          ))}
-        </div>
-
+      <PanelHeader tabs={tabs} activeTab={activeTab} onTabChange={onTabChange}>
         {activeTab === 'terminal' && (
           <span className={`${styles.connection} ${styles[terminalStatus]}`}>
             <span className={styles.connectionDot} />
-            Shell · {terminalStatus}
+            {terminalStatus}
           </span>
         )}
-      </div>
+        <Button variant="ghost" size="sm" icon="x" onClick={onClose} title="Hide panel (Ctrl+`)" />
+      </PanelHeader>
 
       {/* Terminals stay mounted while hidden so their history and connection survive tab switches. */}
       <div className={styles.body}>

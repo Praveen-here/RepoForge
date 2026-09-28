@@ -15,6 +15,9 @@ export function errorHandler(err, req, res, next) {
   if (err.code === 'ENOENT' && err.syscall === 'connect') {
     return res.status(503).json({ message: 'Docker is not running. Start Docker Desktop and try again.' });
   }
+  if (err.code === 'ECONNREFUSED' && err.port === 5432) {
+    return res.status(503).json({ message: 'The database is not reachable. Is PostgreSQL running?' });
+  }
 
   console.error(err);
   res.status(500).json({ message: 'Internal server error' });

@@ -1,40 +1,41 @@
+/* The 8px gap between panel cards doubles as the drag handle (blue line on hover). */
 .resizer {
   position: relative;
   flex-shrink: 0;
-  background: var(--border-soft);
   z-index: 5;
-  transition: background var(--transition);
 }
 
-/* Wider invisible hit area around the 1px line */
 .resizer::after {
   content: '';
   position: absolute;
+  border-radius: 2px;
+  background: transparent;
+  transition: background var(--transition);
 }
 
 .x {
-  width: 1px;
+  width: 8px;
   cursor: col-resize;
 }
 .x::after {
   top: 0;
   bottom: 0;
-  left: -4px;
-  right: -4px;
+  left: 3px;
+  width: 2px;
 }
 
 .y {
-  height: 1px;
+  height: 8px;
   cursor: row-resize;
 }
 .y::after {
   left: 0;
   right: 0;
-  top: -4px;
-  bottom: -4px;
+  top: 3px;
+  height: 2px;
 }
 
-.resizer:hover,
-.resizer:active {
-  background: var(--accent);
+.resizer:hover::after,
+.resizer:active::after {
+  background: var(--handle);
 }

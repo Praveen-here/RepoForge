@@ -1,40 +1,53 @@
+/* Dark theme modelled on LeetCode's problem workspace */
 :root {
   /* Surfaces */
-  --bg: #0b0d12;
-  --surface: #0f1218;
-  --surface-raised: #141821;
-  --surface-hover: #1a1f2a;
-  --surface-active: #202633;
+  --bg: #0f0f0f; /* workspace background */
+  --surface: #262626; /* panel cards */
+  --surface-header: rgba(255, 255, 255, 0.06); /* panel header bars */
+  --surface-hover: rgba(255, 255, 255, 0.06);
+  --surface-active: rgba(255, 255, 255, 0.1);
+  --fill: rgba(255, 255, 255, 0.08); /* buttons */
+  --fill-hover: rgba(255, 255, 255, 0.14);
+  --fill-pill: rgba(255, 255, 255, 0.1); /* tags, pills */
 
   /* Lines */
-  --border: #222834;
-  --border-soft: #191e28;
+  --border: rgba(255, 255, 255, 0.1);
+  --border-soft: rgba(255, 255, 255, 0.06);
 
   /* Text */
-  --text: #e4e7ee;
-  --text-muted: #939bad;
-  --text-faint: #5d6576;
+  --text: #f5f5f5;
+  --text-muted: rgba(255, 255, 255, 0.6);
+  --text-faint: rgba(255, 255, 255, 0.35);
 
-  /* Accent: muted gold */
-  --accent: #c9a45c;
-  --accent-strong: #ddb96f;
-  --accent-soft: rgba(201, 164, 92, 0.12);
-  --accent-ink: #1b1508;
+  /* Brand */
+  --accent: #ffa116;
+  --accent-soft: rgba(255, 161, 22, 0.1);
 
   /* Status */
-  --success: #56c292;
-  --success-soft: rgba(86, 194, 146, 0.12);
-  --danger: #e2646e;
-  --danger-soft: rgba(226, 100, 110, 0.12);
-  --warning: #e0b44a;
-  --info: #78a9f5;
+  --success: #2cbb5d;
+  --success-soft: rgba(44, 187, 93, 0.15);
+  --danger: #ef4743;
+  --danger-soft: rgba(239, 71, 67, 0.15);
+  --warning: #ffb800;
+  --handle: #0a84ff; /* resize handle highlight */
 
-  --radius-sm: 6px;
+  /* Difficulty */
+  --easy: #46c6c2;
+  --medium: #ffb800;
+  --hard: #f63737;
+
+  /* Panel tab icons */
+  --icon-blue: #007aff;
+  --icon-green: #02b128;
+
+  --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+  --font-mono: Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
+
+  --radius-xs: 5px;
   --radius: 8px;
-  --radius-lg: 12px;
 
-  --shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
-  --transition: 140ms ease;
+  --shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+  --transition: 120ms ease;
 
   color-scheme: dark;
 }
@@ -52,8 +65,9 @@ body {
 body {
   background: var(--bg);
   color: var(--text);
-  font-family: var(--font-sans), system-ui, sans-serif;
-  font-size: 13px;
+  font-family: var(--font-sans);
+  font-size: 14px;
+  line-height: 21px;
   -webkit-font-smoothing: antialiased;
   overflow: hidden;
 }
@@ -68,24 +82,22 @@ input {
 }
 
 ::selection {
-  background: rgba(201, 164, 92, 0.28);
+  background: rgba(0, 122, 255, 0.4);
 }
 
 ::-webkit-scrollbar {
-  width: 10px;
-  height: 10px;
+  width: 8px;
+  height: 8px;
 }
 ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.07);
-  border-radius: 10px;
-  border: 2px solid transparent;
-  background-clip: padding-box;
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 8px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.14);
-  background-clip: padding-box;
+  background: rgba(255, 255, 255, 0.2);
 }
-::-webkit-scrollbar-track {
+::-webkit-scrollbar-track,
+::-webkit-scrollbar-corner {
   background: transparent;
 }
 

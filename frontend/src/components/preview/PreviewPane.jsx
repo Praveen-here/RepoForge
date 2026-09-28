@@ -3,14 +3,17 @@
 import { useEffect, useState } from 'react';
 import Button from '@/components/ui/Button';
 import Icon from '@/components/ui/Icon';
+import PanelHeader from '@/components/ui/PanelHeader';
 import Spinner from '@/components/ui/Spinner';
 import styles from './PreviewPane.module.css';
+
+const HEADER_TABS = [{ id: 'preview', label: 'Preview', icon: 'globe', iconColor: 'var(--icon-blue)' }];
 
 /**
  * A mini browser showing the app running inside the session container.
  * reloadSignal: bump this number to reload the page (e.g. after a save).
  */
-export default function PreviewPane({ baseUrl, reloadSignal, busy }) {
+export default function PreviewPane({ baseUrl, reloadSignal, busy, onClose }) {
   const [path, setPath] = useState('/');
   const [address, setAddress] = useState('/');
   const [nonce, setNonce] = useState(0);
@@ -32,12 +35,16 @@ export default function PreviewPane({ baseUrl, reloadSignal, busy }) {
 
   return (
     <div className={styles.pane}>
-      <div className={styles.header}>
-        <span className={styles.title}>
-          <Icon name="globe" size={14} />
-          Preview
-        </span>
-      </div>
+      <PanelHeader tabs={HEADER_TABS}>
+        <Button
+          variant="ghost"
+          size="sm"
+          icon="external"
+          onClick={() => src && window.open(src, '_blank', 'noopener')}
+          title="Open in a new tab"
+        />
+        <Button variant="ghost" size="sm" icon="x" onClick={onClose} title="Hide preview" />
+      </PanelHeader>
 
       <div className={styles.toolbar}>
         <Button variant="ghost" size="sm" icon="refresh" onClick={() => setNonce((n) => n + 1)} title="Reload" />
@@ -51,13 +58,6 @@ export default function PreviewPane({ baseUrl, reloadSignal, busy }) {
             aria-label="Preview path"
           />
         </form>
-        <Button
-          variant="ghost"
-          size="sm"
-          icon="external"
-          onClick={() => src && window.open(src, '_blank', 'noopener')}
-          title="Open in a new tab"
-        />
       </div>
 
       <div className={styles.viewport}>
@@ -72,7 +72,7 @@ export default function PreviewPane({ baseUrl, reloadSignal, busy }) {
         )}
         {busy && (
           <div className={styles.overlay}>
-            <Spinner size={20} color="var(--accent)" />
+            <Spinner size={20} color="var(--text-muted)" />
             <span>Restarting app…</span>
           </div>
         )}

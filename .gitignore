@@ -2,9 +2,10 @@ node_modules/
 .next/
 out/
 
-# Local environment files (copy from .env.example)
+# Local environment files hold secrets (copy from .env.example)
 .env
-.env.local
+.env.*
+!.env.example
 
 .DS_Store
 *.log

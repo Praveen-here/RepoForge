@@ -1,7 +1,7 @@
-import { gradeSession } from '../services/gradingService.js';
 import { getSession } from '../services/sessionService.js';
+import { submitSession } from '../services/submissionService.js';
 
 export async function submit(req, res) {
-  const result = await gradeSession(getSession(req.params.sessionId));
-  res.json({ result });
+  const submission = await submitSession(getSession(req.params.sessionId, req.user.id));
+  res.status(201).json({ submission });
 }

@@ -4,9 +4,12 @@ import Spinner from '@/components/ui/Spinner';
 import { fileName } from '@/lib/files';
 import styles from './EditorPane.module.css';
 
+/** Open-file tabs, shown in the Code panel's toolbar row. */
 export default function EditorTabs({ files, activePath, savingPath, onSelect, onClose }) {
   return (
-    <div className={styles.tabs} role="tablist">
+    <div className={styles.toolbar} role="tablist">
+      {files.length === 0 && <span className={styles.toolbarHint}>No file open</span>}
+
       {files.map((file) => {
         const isActive = file.path === activePath;
         const isDirty = file.content !== file.savedContent;

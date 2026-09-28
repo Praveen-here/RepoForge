@@ -2,70 +2,54 @@
   height: 100%;
   display: flex;
   flex-direction: column;
-  background: #0f1218;
   min-width: 0;
 }
 
-/* ---------- Tabs ---------- */
+/* ---------- Toolbar row with open-file tabs ---------- */
 
-.tabs {
-  height: 38px;
+.toolbar {
+  height: 36px;
   flex-shrink: 0;
   display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 0 8px;
   overflow-x: auto;
   overflow-y: hidden;
-  background: var(--surface);
   border-bottom: 1px solid var(--border-soft);
   scrollbar-width: none;
 }
 
+.toolbarHint {
+  padding: 0 4px;
+  font-size: 13px;
+  color: var(--text-faint);
+}
+
 .tab {
-  position: relative;
+  height: 28px;
   display: flex;
   align-items: center;
-  gap: 7px;
-  padding: 0 8px 0 14px;
-  min-width: 0;
-  border-right: 1px solid var(--border-soft);
+  gap: 6px;
+  padding: 0 4px 0 8px;
+  border-radius: var(--radius-xs);
   color: var(--text-muted);
-  cursor: pointer;
+  font-size: 13px;
   white-space: nowrap;
+  cursor: pointer;
   user-select: none;
+  transition: background var(--transition), color var(--transition);
 }
 
 .tab:hover {
-  background: var(--surface-raised);
+  background: var(--surface-hover);
   color: var(--text);
 }
 
 .tabActive,
 .tabActive:hover {
-  background: #0f1218;
+  background: var(--fill);
   color: var(--text);
-}
-
-.tabActive::before {
-  content: '';
-  position: absolute;
-  left: 0;
-  right: 0;
-  top: 0;
-  height: 2px;
-  background: var(--accent);
-}
-
-.tabActive::after {
-  content: '';
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: -1px;
-  height: 1px;
-  background: #0f1218;
-}
-
-.tabName {
-  font-size: 12.5px;
 }
 
 .tabLock {
@@ -81,10 +65,10 @@
 }
 
 .tabDirty {
-  width: 8px;
-  height: 8px;
+  width: 7px;
+  height: 7px;
   border-radius: 50%;
-  background: var(--accent);
+  background: var(--text);
 }
 
 .tabClose {
@@ -96,7 +80,7 @@
   border: none;
   border-radius: 4px;
   background: transparent;
-  color: var(--text-faint);
+  color: var(--text-muted);
   cursor: pointer;
   opacity: 0;
 }
@@ -111,48 +95,11 @@
 }
 
 .tabClose:hover {
-  background: var(--surface-active);
+  background: var(--fill-hover);
   color: var(--text);
 }
 
-/* ---------- Breadcrumbs ---------- */
-
-.breadcrumbs {
-  height: 28px;
-  flex-shrink: 0;
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  padding: 0 16px;
-  font-size: 12px;
-  color: var(--text-faint);
-  border-bottom: 1px solid var(--border-soft);
-}
-
-.crumb {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-}
-
-.crumbCurrent {
-  color: var(--text-muted);
-}
-
-.readOnly {
-  margin-left: auto;
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  padding: 2px 8px;
-  border-radius: 999px;
-  background: var(--surface-raised);
-  border: 1px solid var(--border);
-  font-size: 11px;
-  color: var(--text-muted);
-}
-
-/* ---------- Body ---------- */
+/* ---------- Editor body ---------- */
 
 .body {
   flex: 1;
@@ -166,49 +113,41 @@
   place-items: center;
 }
 
+.empty {
+  margin: 0;
+  color: var(--text-faint);
+}
+
 .error {
   color: var(--danger);
 }
 
-.empty {
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 14px;
-  color: var(--text-faint);
-}
+/* ---------- Footer: "Saved ... Ln 1, Col 1" ---------- */
 
-.emptyLogo {
-  opacity: 0.22;
-  filter: grayscale(0.4);
-}
-
-.emptyTitle {
-  margin: 0;
-  font-size: 14px;
-  color: var(--text-muted);
-}
-
-.shortcuts {
+.footer {
+  height: 32px;
+  flex-shrink: 0;
   display: flex;
   align-items: center;
-  gap: 6px;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 0 12px;
   font-size: 12px;
-}
-
-.shortcuts span {
-  margin-right: 6px;
-}
-
-.shortcuts kbd {
-  padding: 2px 7px;
-  border-radius: 5px;
-  background: var(--surface-raised);
-  border: 1px solid var(--border);
-  border-bottom-width: 2px;
-  font-family: var(--font-mono);
-  font-size: 11px;
   color: var(--text-muted);
+}
+
+.footerLeft {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.readOnly {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
 }

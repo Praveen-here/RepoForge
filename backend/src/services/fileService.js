@@ -1,6 +1,5 @@
 import path from 'node:path';
 import { config } from '../config/index.js';
-import { getProblem } from '../config/problems.js';
 import { HttpError } from '../utils/HttpError.js';
 import { isEditable, resolveProblemPath, toRelativePath } from '../utils/paths.js';
 import { packFiles, readFirstFile } from '../utils/tar.js';
@@ -66,7 +65,7 @@ function buildTree(entries, problem) {
 }
 
 export async function listFiles(session) {
-  const problem = getProblem(session.problemId);
+  const { problem } = session;
   const container = getSessionContainer(session);
 
   const { stdout } = await execInContainer(container, listCommand(problem.rootDir));
@@ -83,7 +82,7 @@ export async function listFiles(session) {
 // ---------- Read / write ----------
 
 export async function readFile(session, relPath) {
-  const problem = getProblem(session.problemId);
+  const { problem } = session;
   const absPath = resolveProblemPath(problem, relPath);
   const container = getSessionContainer(session);
 
@@ -109,7 +108,7 @@ export async function readFile(session, relPath) {
 }
 
 export async function writeFile(session, relPath, content) {
-  const problem = getProblem(session.problemId);
+  const { problem } = session;
   const absPath = resolveProblemPath(problem, relPath);
   const relativePath = toRelativePath(problem, absPath);
 

@@ -3,15 +3,10 @@ import Spinner from '@/components/ui/Spinner';
 import styles from './TestResults.module.css';
 
 const VERDICTS = {
-  accepted: { title: 'Accepted', subtitle: 'All hidden tests passed. Nicely done.', tone: 'success', icon: 'check' },
-  failed: { title: 'Wrong Answer', subtitle: 'Some hidden tests failed. Keep digging.', tone: 'danger', icon: 'x' },
-  error: {
-    title: 'Runtime Error',
-    subtitle: 'The tests could not run. Check the App Logs tab for errors in your code.',
-    tone: 'danger',
-    icon: 'alert',
-  },
-  timeout: { title: 'Time Limit Exceeded', subtitle: 'Grading took too long and was stopped.', tone: 'danger', icon: 'clock' },
+  accepted: { title: 'Accepted', tone: 'success' },
+  failed: { title: 'Wrong Answer', tone: 'danger' },
+  error: { title: 'Runtime Error', tone: 'danger', note: 'The tests could not run. Check App Logs for errors in your code.' },
+  timeout: { title: 'Time Limit Exceeded', tone: 'danger', note: 'Grading took too long and was stopped.' },
 };
 
 /** submission: { status: "idle" | "running" | "done" | "error", result?, error? } */
@@ -19,9 +14,8 @@ export default function TestResults({ submission }) {
   if (submission.status === 'idle') {
     return (
       <div className={styles.placeholder}>
-        <Icon name="beaker" size={26} />
-        <p>Click <strong>Submit</strong> to grade your fix against the hidden tests.</p>
-        <p className={styles.hint}>Grading runs in a fresh, isolated container. Your workspace is not touched.</p>
+        <p>You must submit your code first.</p>
+        <p className={styles.hint}>Submissions are judged against hidden tests in a fresh, isolated container.</p>
       </div>
     );
   }
@@ -29,8 +23,8 @@ export default function TestResults({ submission }) {
   if (submission.status === 'running') {
     return (
       <div className={styles.placeholder}>
-        <Spinner size={24} color="var(--accent)" />
-        <p>Running hidden tests in an isolated container…</p>
+        <Spinner size={22} color="var(--text-muted)" />
+        <p>Judging…</p>
       </div>
     );
   }
@@ -38,47 +32,50 @@ export default function TestResults({ submission }) {
   if (submission.status === 'error') {
     return (
       <div className={styles.placeholder}>
-        <Icon name="alert" size={24} style={{ color: 'var(--danger)' }} />
-        <p>{submission.error}</p>
+        <p className={styles.danger}>{submission.error}</p>
       </div>
     );
   }
 
   const { result } = submission;
   const verdict = VERDICTS[result.status] || VERDICTS.error;
-  const percent = result.total ? Math.round((result.passed / result.total) * 100) : 0;
 
   return (
     <div className={styles.results}>
-      <div className={`${styles.summary} ${styles[verdict.tone]}`}>
-        <div className={styles.verdictIcon}>
-          <Icon name={verdict.icon} size={20} strokeWidth={2.25} />
-        </div>
-        <div className={styles.verdictText}>
-          <h3>{verdict.title}</h3>
-          <p>{verdict.subtitle}</p>
-        </div>
-        <div className={styles.score}>
-          <span className={styles.scoreValue}>
-            {result.passed}
-            <span>/{result.total}</span>
-          </span>
-          <span className={styles.scoreLabel}>tests passed · {(result.durationMs / 1000).toFixed(1)}s</span>
-        </div>
+      <div className={styles.header}>
+        <h2 className={`${styles.verdict} ${styles[verdict.tone]}`}>{verdict.title}</h2>
+        <span className={styles.summary}>
+          {result.passed} / {result.total} testcases passed
+        </span>
       </div>
 
-      {result.total > 0 && (
-        <div className={styles.progress}>
-          <div className={styles.progressFill} style={{ width: `${percent}%` }} />
+      {verdict.note && <p className={styles.note}>{verdict.note}</p>}
+
+      <div className={styles.stats}>
+        <div className={styles.stat}>
+          <span className={styles.statLabel}>
+            <Icon name="clock" size={14} />
+            Runtime
+          </span>
+          <span className={styles.statValue}>
+            {(result.durationMs / 1000).toFixed(2)} <small>s</small>
+          </span>
         </div>
-      )}
+        <div className={styles.stat}>
+          <span className={styles.statLabel}>
+            <Icon name="checkSquare" size={14} />
+            Passed
+          </span>
+          <span className={styles.statValue}>
+            {result.passed} <small>/ {result.total}</small>
+          </span>
+        </div>
+      </div>
 
       <ul className={styles.list}>
         {result.tests.map((test) => (
           <li key={test.name} className={styles.test}>
-            <span className={test.status === 'passed' ? styles.pass : styles.fail}>
-              <Icon name={test.status === 'passed' ? 'check' : 'x'} size={14} strokeWidth={2.25} />
-            </span>
+            <span className={`${styles.testDot} ${test.status === 'passed' ? styles.pass : styles.fail}`} />
             <span className={styles.testName}>{test.name}</span>
             <span className={styles.duration}>{test.durationMs} ms</span>
           </li>

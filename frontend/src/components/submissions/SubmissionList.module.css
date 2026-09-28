@@ -1,0 +1,60 @@
+.list {
+  height: 100%;
+  overflow: auto;
+  padding: 8px 12px 20px;
+}
+
+.row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 70px 80px;
+  align-items: center;
+  gap: 8px;
+  min-height: 52px;
+  padding: 0 10px;
+  border-radius: var(--radius);
+}
+
+.row:nth-child(odd):not(.head) {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.head {
+  min-height: 34px;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.statusCell {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.accepted {
+  color: var(--success);
+  font-weight: 600;
+}
+
+.rejected {
+  color: var(--danger);
+  font-weight: 600;
+}
+
+.when {
+  font-size: 12px;
+  color: var(--text-faint);
+}
+
+.muted {
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.message {
+  display: flex;
+  justify-content: center;
+  margin: 0;
+  padding: 32px 20px;
+  text-align: center;
+  color: var(--text-muted);
+}

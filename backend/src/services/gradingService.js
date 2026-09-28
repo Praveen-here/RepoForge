@@ -1,7 +1,6 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { config } from '../config/index.js';
-import { getProblem } from '../config/problems.js';
 import { HttpError } from '../utils/HttpError.js';
 import { packFiles, readFirstFile } from '../utils/tar.js';
 import { docker, execInContainer } from './docker.js';
@@ -70,7 +69,7 @@ function summarize(report) {
 }
 
 export async function gradeSession(session) {
-  const problem = getProblem(session.problemId);
+  const { problem } = session;
   const startedAt = Date.now();
 
   const grader = await docker.createContainer({

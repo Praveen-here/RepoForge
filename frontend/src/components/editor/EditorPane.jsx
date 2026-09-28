@@ -1,19 +1,22 @@
 'use client';
 
 import Editor from '@monaco-editor/react';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Icon from '@/components/ui/Icon';
-import Logo from '@/components/ui/Logo';
+import PanelHeader from '@/components/ui/PanelHeader';
 import Spinner from '@/components/ui/Spinner';
-import { languageFor } from '@/lib/files';
+import { languageFor, languageLabel } from '@/lib/files';
 import EditorTabs from './EditorTabs';
 import { defineEditorTheme, EDITOR_THEME, monoFontFamily } from './editorTheme';
 import styles from './EditorPane.module.css';
 
-export default function EditorPane({ files, activeFile, savingPath, onSelect, onClose, onChange, onSave }) {
+const HEADER_TABS = [{ id: 'code', label: 'Code', icon: 'code', iconColor: 'var(--icon-green)' }];
+
+export default function EditorPane({ files, activeFile, savingPath, saveState, onSelect, onClose, onChange, onSave }) {
   const monacoRef = useRef(null);
   const activePathRef = useRef(null);
   const onSaveRef = useRef(onSave);
+  const [cursor, setCursor] = useState({ line: 1, column: 1 });
   activePathRef.current = activeFile?.path ?? null;
   onSaveRef.current = onSave;
 
@@ -32,10 +35,17 @@ export default function EditorPane({ files, activeFile, savingPath, onSelect, on
     editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyS, () => {
       if (activePathRef.current) onSaveRef.current(activePathRef.current);
     });
+    editor.onDidChangeCursorPosition(({ position }) => {
+      setCursor({ line: position.lineNumber, column: position.column });
+    });
   };
+
+  const isDirty = activeFile && activeFile.content !== activeFile.savedContent;
 
   return (
     <div className={styles.pane}>
+      <PanelHeader tabs={HEADER_TABS} />
+
       <EditorTabs
         files={files}
         activePath={activeFile?.path}
@@ -44,29 +54,16 @@ export default function EditorPane({ files, activeFile, savingPath, onSelect, on
         onClose={onClose}
       />
 
-      {activeFile && (
-        <div className={styles.breadcrumbs}>
-          {activeFile.path.split('/').map((part, index, parts) => (
-            <span key={index} className={`${styles.crumb} ${index === parts.length - 1 ? styles.crumbCurrent : ''}`}>
-              {part}
-              {index < parts.length - 1 && <Icon name="chevronRight" size={11} />}
-            </span>
-          ))}
-          {!activeFile.editable && (
-            <span className={styles.readOnly}>
-              <Icon name="lock" size={11} />
-              Read-only
-            </span>
-          )}
-        </div>
-      )}
-
       <div className={styles.body}>
-        {!activeFile && <EmptyEditor />}
+        {!activeFile && (
+          <div className={styles.centered}>
+            <p className={styles.empty}>Open a file from the Explorer to start fixing.</p>
+          </div>
+        )}
 
         {activeFile?.status === 'loading' && (
           <div className={styles.centered}>
-            <Spinner size={18} color="var(--accent)" />
+            <Spinner size={18} color="var(--text-muted)" />
           </div>
         )}
 
@@ -85,45 +82,43 @@ export default function EditorPane({ files, activeFile, savingPath, onSelect, on
             beforeMount={defineEditorTheme}
             onMount={handleMount}
             onChange={(value) => onChange(activeFile.path, value ?? '')}
-            loading={<Spinner size={18} color="var(--accent)" />}
+            loading={<Spinner size={18} color="var(--text-muted)" />}
             options={{
               readOnly: !activeFile.editable,
               readOnlyMessage: { value: 'This file is read-only. You can edit files in the highlighted folders.' },
               fontFamily: monoFontFamily(),
-              fontSize: 13.5,
-              lineHeight: 22,
-              fontLigatures: true,
+              fontSize: 14,
+              lineHeight: 21,
               minimap: { enabled: false },
               scrollBeyondLastLine: false,
               smoothScrolling: true,
-              cursorBlinking: 'smooth',
-              cursorSmoothCaretAnimation: 'on',
               renderLineHighlight: 'all',
-              padding: { top: 14, bottom: 14 },
+              padding: { top: 8, bottom: 8 },
               tabSize: 2,
               automaticLayout: true,
               stickyScroll: { enabled: false },
-              guides: { indentation: true },
-              scrollbar: { verticalScrollbarSize: 10, horizontalScrollbarSize: 10 },
+              overviewRulerBorder: false,
+              scrollbar: { verticalScrollbarSize: 8, horizontalScrollbarSize: 8 },
             }}
           />
         )}
       </div>
-    </div>
-  );
-}
 
-function EmptyEditor() {
-  return (
-    <div className={styles.empty}>
-      <div className={styles.emptyLogo}>
-        <Logo size={56} />
-      </div>
-      <p className={styles.emptyTitle}>Open a file to start fixing</p>
-      <div className={styles.shortcuts}>
-        <span>Save file</span>
-        <kbd>Ctrl</kbd>
-        <kbd>S</kbd>
+      <div className={styles.footer}>
+        <span className={styles.footerLeft}>
+          {activeFile && !activeFile.editable && (
+            <span className={styles.readOnly}>
+              <Icon name="lock" size={12} />
+              Read-only
+            </span>
+          )}
+          {activeFile?.editable && (isDirty ? 'Unsaved changes · Ctrl+S to save' : saveState)}
+        </span>
+        {activeFile?.status === 'ready' && (
+          <span>
+            {languageLabel(activeFile.path)} · Ln {cursor.line}, Col {cursor.column}
+          </span>
+        )}
       </div>
     </div>
   );

@@ -1,102 +1,146 @@
 .bar {
-  height: 52px;
+  height: 48px;
   flex-shrink: 0;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  padding: 0 12px 0 16px;
+  background: var(--bg);
+}
+
+.left {
   display: flex;
   align-items: center;
   gap: 16px;
-  padding: 0 14px 0 16px;
-  background: linear-gradient(180deg, #11141b, #0e1117);
-  border-bottom: 1px solid var(--border);
 }
 
-.brand {
+.logo {
   display: flex;
-  align-items: center;
-  gap: 10px;
 }
 
-.brandName {
-  font-size: 15px;
-  font-weight: 650;
-  letter-spacing: -0.01em;
+.problemList {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 500;
+  color: var(--text);
+  text-decoration: none;
+  transition: color var(--transition);
 }
-.brandName span {
+
+.problemList:hover {
   color: var(--accent);
+}
+
+.problemList svg {
+  color: var(--text-muted);
+}
+
+.center {
+  display: flex;
+  justify-content: center;
+}
+
+/* Joined button group, like LeetCode's Run / Submit bar */
+.group {
+  display: flex;
+  gap: 1px;
+}
+
+.iconButton,
+.submit {
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: none;
+  background: var(--fill);
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: background var(--transition), color var(--transition);
+}
+
+.iconButton {
+  width: 36px;
+}
+
+.group > :first-child {
+  border-radius: var(--radius-xs) 0 0 var(--radius-xs);
+}
+
+.group > :last-child {
+  border-radius: 0 var(--radius-xs) var(--radius-xs) 0;
+}
+
+.iconButton:hover:not(:disabled),
+.submit:hover:not(:disabled) {
+  background: var(--fill-hover);
+  color: var(--text);
+}
+
+.submit {
+  padding: 0 16px 0 12px;
+  color: var(--success);
+  font-weight: 600;
+}
+
+.submit:hover:not(:disabled) {
+  color: var(--success);
+}
+
+.iconButton:disabled,
+.submit:disabled {
+  cursor: default;
+}
+
+.right {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 4px;
+}
+
+/* Layout toggles: highlighted while the panel is visible */
+.toggle {
+  width: 32px;
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: var(--radius-xs);
+  background: transparent;
+  color: var(--text-faint);
+  cursor: pointer;
+  transition: background var(--transition), color var(--transition);
+}
+
+.toggle:hover {
+  background: var(--fill);
+  color: var(--text);
+}
+
+.toggleOn {
+  color: var(--text);
 }
 
 .divider {
   width: 1px;
-  height: 22px;
+  height: 18px;
+  margin: 0 6px;
   background: var(--border);
-}
-
-.problem {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  min-width: 0;
-}
-
-.problemId {
-  font-family: var(--font-mono);
-  font-size: 12px;
-  color: var(--text-faint);
-}
-
-.problemTitle {
-  font-size: 14px;
-  font-weight: 600;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.badge,
-.chip {
-  height: 20px;
-  display: inline-flex;
-  align-items: center;
-  padding: 0 8px;
-  border-radius: 999px;
-  font-size: 11px;
-  font-weight: 600;
-  white-space: nowrap;
-}
-
-.difficultyEasy {
-  color: var(--success);
-  background: var(--success-soft);
-}
-.difficultyMedium {
-  color: var(--warning);
-  background: rgba(224, 180, 74, 0.12);
-}
-.difficultyHard {
-  color: var(--danger);
-  background: var(--danger-soft);
-}
-
-.chip {
-  color: var(--text-muted);
-  border: 1px solid var(--border);
-  font-weight: 500;
-}
-
-.actions {
-  margin-left: auto;
-  display: flex;
-  align-items: center;
-  gap: 8px;
 }
 
 .status {
   display: inline-flex;
   align-items: center;
-  gap: 7px;
-  margin-right: 6px;
-  font-size: 12px;
+  gap: 8px;
+  height: 32px;
+  padding: 0 12px 0 6px;
+  border-radius: var(--radius-xs);
+  font-size: 13px;
   color: var(--text-muted);
-  white-space: nowrap;
 }
 
 .dot {
@@ -104,17 +148,14 @@
   height: 7px;
   border-radius: 50%;
   background: var(--success);
-  box-shadow: 0 0 0 3px var(--success-soft);
 }
 
 .restarting .dot {
   background: var(--warning);
-  box-shadow: 0 0 0 3px rgba(224, 180, 74, 0.15);
 }
 
-@media (max-width: 1100px) {
-  .problemId,
-  .chip,
+@media (max-width: 900px) {
+  .problemList,
   .status {
     display: none;
   }

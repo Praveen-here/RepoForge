@@ -1,8 +1,10 @@
 import { Router } from 'express';
-import { getProblemById } from '../controllers/problemController.js';
+import { getProblemBySlug, getProblemList, getProblemSubmissions } from '../controllers/problemController.js';
 
 const router = Router();
 
-router.get('/:problemId', getProblemById);
+router.get('/', getProblemList);
+router.get('/:problemId', getProblemBySlug);
+router.get('/:problemId/submissions', getProblemSubmissions);
 
 export default router;

@@ -4,6 +4,7 @@ const WS_URL = API_URL.replace(/^http/, 'ws');
 async function request(path, { method = 'GET', body } = {}) {
   const res = await fetch(`${API_URL}/api${path}`, {
     method,
+    credentials: 'include', // send the httpOnly login cookie
     headers: body ? { 'Content-Type': 'application/json' } : undefined,
     body: body ? JSON.stringify(body) : undefined,
   });
@@ -18,8 +19,19 @@ async function request(path, { method = 'GET', body } = {}) {
 }
 
 export const api = {
-  getProblem: (problemId) => request(`/problems/${problemId}`),
+  // Auth
+  getMe: () => request('/auth/me'),
+  getProviders: () => request('/auth/providers'),
+  requestMagicLink: (email, next) => request('/auth/magic-link', { method: 'POST', body: { email, next } }),
+  verifyMagicLink: (token) => request('/auth/magic-link/verify', { method: 'POST', body: { token } }),
+  logout: () => request('/auth/logout', { method: 'POST' }),
 
+  // Problems
+  listProblems: () => request('/problems'),
+  getProblem: (problemId) => request(`/problems/${problemId}`),
+  listSubmissions: (problemId) => request(`/problems/${problemId}/submissions`),
+
+  // Workspace sessions
   startSession: (problemId) => request('/sessions', { method: 'POST', body: { problemId } }),
   restartSession: (sessionId) => request(`/sessions/${sessionId}/restart`, { method: 'POST' }),
 
@@ -31,6 +43,11 @@ export const api = {
 
   submit: (sessionId) => request(`/sessions/${sessionId}/submissions`, { method: 'POST' }),
 };
+
+/** Full-page redirect target that starts "Sign in with Google/GitHub". */
+export function oauthStartUrl(provider, next = '/problems') {
+  return `${API_URL}/api/auth/${provider}?next=${encodeURIComponent(next)}`;
+}
 
 /** kind: "terminal" | "logs" */
 export function socketUrl(kind, sessionId) {
