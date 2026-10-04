@@ -72,6 +72,10 @@ export default function UserMenu() {
               <span className={styles.email}>{user.email}</span>
             </div>
           </div>
+          <Link href={`/u/${user.username}`} className={styles.item} onClick={() => setOpen(false)} role="menuitem">
+            <Icon name="user" size={16} />
+            My Profile
+          </Link>
           <Link href="/problems" className={styles.item} onClick={() => setOpen(false)} role="menuitem">
             <Icon name="list" size={16} />
             Problems

@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import Spinner from '@/components/ui/Spinner';
 import { api } from '@/lib/api';
+import { timeAgo } from '@/lib/time';
 import styles from './SubmissionList.module.css';
 
 const STATUS_LABELS = {
@@ -11,14 +12,6 @@ const STATUS_LABELS = {
   error: 'Runtime Error',
   timeout: 'Time Limit Exceeded',
 };
-
-function formatWhen(isoDate) {
-  const seconds = Math.round((Date.now() - new Date(isoDate).getTime()) / 1000);
-  if (seconds < 60) return 'just now';
-  if (seconds < 3600) return `${Math.floor(seconds / 60)} min ago`;
-  if (seconds < 86400) return `${Math.floor(seconds / 3600)} hr ago`;
-  return new Date(isoDate).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' });
-}
 
 /** The user's past submissions for one problem. Reloads when refreshKey changes. */
 export default function SubmissionList({ problemId, refreshKey }) {
@@ -57,7 +50,7 @@ export default function SubmissionList({ problemId, refreshKey }) {
             <span className={submission.status === 'accepted' ? styles.accepted : styles.rejected}>
               {STATUS_LABELS[submission.status] || submission.status}
             </span>
-            <span className={styles.when}>{formatWhen(submission.createdAt)}</span>
+            <span className={styles.when}>{timeAgo(submission.createdAt)}</span>
           </span>
           <span className={styles.muted}>
             {submission.passed} / {submission.total}

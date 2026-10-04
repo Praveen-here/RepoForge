@@ -3,7 +3,8 @@ import { pool } from '../db/pool.js';
 // All SQL for users and their sign-in accounts. Functions take an optional
 // `db` (a transaction client) so they can run inside withTransaction().
 
-const USER_COLUMNS = 'u.id, u.email, u.name, u.avatar_url, u.created_at, u.last_login_at';
+const USER_COLUMNS = 'u.id, u.email, u.username, u.name, u.avatar_url, u.created_at, u.last_login_at';
+const RETURNING = 'RETURNING id, email, username, name, avatar_url, created_at, last_login_at';
 
 export async function findUserById(id, db = pool) {
   const { rows } = await db.query(`SELECT ${USER_COLUMNS} FROM users u WHERE u.id = $1`, [id]);
@@ -13,6 +14,16 @@ export async function findUserById(id, db = pool) {
 export async function findUserByEmail(email, db = pool) {
   const { rows } = await db.query(`SELECT ${USER_COLUMNS} FROM users u WHERE u.email = $1`, [email]);
   return rows[0] || null;
+}
+
+export async function findUserByUsername(username, db = pool) {
+  const { rows } = await db.query(`SELECT ${USER_COLUMNS} FROM users u WHERE u.username = $1`, [username]);
+  return rows[0] || null;
+}
+
+export async function usernameTaken(username, db = pool) {
+  const { rows } = await db.query('SELECT 1 FROM users WHERE username = $1', [username]);
+  return rows.length > 0;
 }
 
 export async function findUserByAccount(provider, providerUserId, db = pool) {
@@ -25,11 +36,10 @@ export async function findUserByAccount(provider, providerUserId, db = pool) {
   return rows[0] || null;
 }
 
-export async function createUser({ email, name, avatarUrl }, db = pool) {
+export async function createUser({ email, username, name, avatarUrl }, db = pool) {
   const { rows } = await db.query(
-    `INSERT INTO users (email, name, avatar_url) VALUES ($1, $2, $3)
-     RETURNING id, email, name, avatar_url, created_at, last_login_at`,
-    [email, name, avatarUrl || null],
+    `INSERT INTO users (email, username, name, avatar_url) VALUES ($1, $2, $3, $4) ${RETURNING}`,
+    [email, username, name, avatarUrl || null],
   );
   return rows[0];
 }
@@ -45,10 +55,17 @@ export async function linkAccount({ userId, provider, providerUserId }, db = poo
 /** Records the login and fills in an avatar if the user did not have one yet. */
 export async function recordLogin(userId, { avatarUrl }, db = pool) {
   const { rows } = await db.query(
-    `UPDATE users SET last_login_at = now(), avatar_url = COALESCE(avatar_url, $2)
-     WHERE id = $1
-     RETURNING id, email, name, avatar_url, created_at, last_login_at`,
+    `UPDATE users SET last_login_at = now(), avatar_url = COALESCE(avatar_url, $2) WHERE id = $1 ${RETURNING}`,
     [userId, avatarUrl || null],
   );
+  return rows[0];
+}
+
+export async function updateProfile(userId, { name, username }, db = pool) {
+  const { rows } = await db.query(`UPDATE users SET name = $2, username = $3 WHERE id = $1 ${RETURNING}`, [
+    userId,
+    name,
+    username,
+  ]);
   return rows[0];
 }

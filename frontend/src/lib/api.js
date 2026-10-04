@@ -11,12 +11,19 @@ async function request(path, { method = 'GET', body } = {}) {
 
   const data = res.status === 204 ? {} : await res.json().catch(() => ({}));
   if (!res.ok) {
+    // A workspace container that was stopped (idle cleanup, too many open problems, Docker
+    // restart) answers 404/410. Tell the workspace so it can offer to restart it.
+    if (/^\/sessions\/[^/]+/.test(path) && (res.status === 404 || res.status === 410)) {
+      window.dispatchEvent(new CustomEvent(SESSION_LOST_EVENT, { detail: { path } }));
+    }
     const error = new Error(data.message || `Request failed (${res.status})`);
     error.status = res.status;
     throw error;
   }
   return data;
 }
+
+export const SESSION_LOST_EVENT = 'repo-forge:session-lost';
 
 export const api = {
   // Auth
@@ -34,6 +41,8 @@ export const api = {
   // Workspace sessions
   startSession: (problemId) => request('/sessions', { method: 'POST', body: { problemId } }),
   restartSession: (sessionId) => request(`/sessions/${sessionId}/restart`, { method: 'POST' }),
+  resetSession: (sessionId) => request(`/sessions/${sessionId}/reset`, { method: 'POST' }),
+  heartbeat: (sessionId) => request(`/sessions/${sessionId}/heartbeat`, { method: 'POST' }),
 
   listFiles: (sessionId) => request(`/sessions/${sessionId}/files`),
   readFile: (sessionId, path) =>
@@ -42,6 +51,10 @@ export const api = {
     request(`/sessions/${sessionId}/files/content`, { method: 'PUT', body: { path, content } }),
 
   submit: (sessionId) => request(`/sessions/${sessionId}/submissions`, { method: 'POST' }),
+
+  // Users
+  getProfile: (username) => request(`/users/${encodeURIComponent(username)}/profile`),
+  updateMe: (changes) => request('/users/me', { method: 'PATCH', body: changes }),
 };
 
 /** Full-page redirect target that starts "Sign in with Google/GitHub". */

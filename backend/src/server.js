@@ -2,7 +2,7 @@ import http from 'node:http';
 import { createApp } from './app.js';
 import { assertConfig, config } from './config/index.js';
 import { pool } from './db/pool.js';
-import { restoreSessions } from './services/sessionService.js';
+import { reapIdleSessions, restoreSessions } from './services/sessionService.js';
 import { attachWebSockets } from './ws/index.js';
 
 try {
@@ -39,6 +39,11 @@ server.on('error', (error) => {
   }
   throw error;
 });
+
+// Stop containers nobody has used for a while (their files are kept in volumes).
+setInterval(() => {
+  reapIdleSessions().catch((error) => console.error('Idle-session cleanup failed:', error.message));
+}, config.sessions.reaperIntervalMs).unref();
 
 server.listen(config.port, () => {
   console.log(`Repo Forge API running on ${config.apiUrl}`);

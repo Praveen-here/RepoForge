@@ -1,21 +1,37 @@
 import { randomUUID } from 'node:crypto';
 import { config } from '../config/index.js';
+import {
+  deleteWorkspaceSession,
+  findWorkspaceSession,
+  findWorkspaceSessionFor,
+  insertWorkspaceSession,
+  listAllWorkspaceSessions,
+  listExpiredWorkspaceSessions,
+  listWorkspaceSessionsForUser,
+  touchWorkspaceSession,
+  updateWorkspaceSessionPort,
+} from '../repositories/workspaceSessionRepository.js';
 import { HttpError } from '../utils/HttpError.js';
 import { docker, ensureImage, waitForHttp } from './docker.js';
-import { getProblem } from './problemService.js';
+import { getProblem, resourcesFor } from './problemService.js';
 
 // A "session" = one user working on one problem = one running container.
-// Each session keeps a copy of its problem's settings in `session.problem`.
-// Sessions live in memory (Phase 3 moves them to Postgres); on start-up the
-// backend re-adopts containers that are still running.
+//
+// Postgres (workspace_sessions) is the source of truth, so sessions survive backend
+// restarts. A small in-memory cache keeps each session's problem settings at hand.
+// The user's code lives in Docker volumes, so stopping a container never loses work:
+//   - idle for 20 minutes (or running for 3 hours) -> container stopped by the reaper
+//   - more than 2 running containers per user      -> the least recently used is stopped
+//   - "Reset problem"                               -> container AND volumes deleted
 
 const LABELS = {
   session: 'repo-forge.session',
   problem: 'repo-forge.problem',
   user: 'repo-forge.user',
 };
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-const sessions = new Map(); // sessionId -> session
+const cache = new Map(); // sessionId -> session
 const pendingStarts = new Map(); // "user:problem" -> Promise<session>, avoids duplicate containers
 
 /** The user's saved work for one editable folder, kept after the container is deleted. */
@@ -26,15 +42,29 @@ function volumeName(userId, problemId, dir) {
 function buildSession({ id, userId, problem, containerId, containerName, hostPort, createdAt }) {
   return {
     id,
-    userId,
+    userId: String(userId),
     problemId: problem.id,
     problem,
     containerId,
     containerName,
     hostPort,
     previewUrl: `http://localhost:${hostPort}`,
-    createdAt: createdAt || new Date().toISOString(),
+    createdAt: new Date(createdAt || Date.now()).toISOString(),
+    lastTouchedAt: Date.now(),
   };
+}
+
+async function sessionFromRow(row) {
+  const problem = await getProblem(row.problem_slug);
+  return buildSession({
+    id: row.id,
+    userId: row.user_id,
+    problem,
+    containerId: row.container_id,
+    containerName: row.container_name,
+    hostPort: row.host_port,
+    createdAt: row.created_at,
+  });
 }
 
 async function readHostPort(container, problem) {
@@ -46,13 +76,37 @@ async function readHostPort(container, problem) {
   return Number(binding.HostPort);
 }
 
-async function isRunning(session) {
+async function isRunning(containerId) {
   try {
-    const info = await docker.getContainer(session.containerId).inspect();
-    return info.State.Running;
+    return (await docker.getContainer(containerId).inspect()).State.Running;
   } catch {
     return false;
   }
+}
+
+async function removeContainer(containerId) {
+  try {
+    await docker.getContainer(containerId).remove({ force: true });
+  } catch (error) {
+    if (error.statusCode !== 404) throw error;
+  }
+}
+
+async function removeVolumes(userId, problem) {
+  for (const dir of problem.editable) {
+    await docker
+      .getVolume(volumeName(userId, problem.id, dir))
+      .remove()
+      .catch(() => {});
+  }
+}
+
+/** Stops a session's container and forgets the session. The user's files are kept. */
+async function endSession({ id, containerId }, reason) {
+  await removeContainer(containerId);
+  await deleteWorkspaceSession(id);
+  cache.delete(id);
+  if (reason) console.log(`Session ${id.slice(0, 8)} stopped: ${reason}`);
 }
 
 async function createContainer(problem, userId) {
@@ -81,36 +135,55 @@ async function createContainer(problem, userId) {
         Source: volumeName(userId, problem.id, dir),
         Target: `${problem.rootDir}/${dir}`,
       })),
-      Memory: config.container.memoryBytes,
-      NanoCpus: config.container.nanoCpus,
-      PidsLimit: config.container.pidsLimit,
+      ...resourcesFor(problem).hostConfig,
     },
   });
 
   await container.start();
   const hostPort = await readHostPort(container, problem);
-
   return buildSession({ id, userId, problem, containerId: container.id, containerName, hostPort });
+}
+
+/** Keeps at most `maxPerUser` running containers: stops the least recently used others. */
+async function makeRoomFor(userId, problem) {
+  const others = (await listWorkspaceSessionsForUser(userId)).filter((row) => row.problem_slug !== problem.id);
+  const excess = others.length - (config.sessions.maxPerUser - 1);
+  for (const row of others.slice(0, Math.max(0, excess))) {
+    await endSession({ id: row.id, containerId: row.container_id }, `user ${userId} opened a newer problem`);
+  }
 }
 
 /** Starts (or reuses) the container for this user + problem. */
 export async function startSession(problemSlug, userId) {
   const problem = await getProblem(problemSlug);
   const key = `${userId}:${problem.id}`;
-
   if (pendingStarts.has(key)) return pendingStarts.get(key);
 
   const start = (async () => {
-    const existing = [...sessions.values()].find((s) => s.userId === userId && s.problemId === problem.id);
+    const existing = await findWorkspaceSessionFor(userId, problem.dbId);
     if (existing) {
-      if (await isRunning(existing)) return existing;
-      await removeContainer(existing);
-      sessions.delete(existing.id);
+      if (await isRunning(existing.container_id)) {
+        await touchWorkspaceSession(existing.id);
+        const session = cache.get(existing.id) || (await sessionFromRow(existing));
+        cache.set(session.id, session);
+        return session;
+      }
+      await endSession({ id: existing.id, containerId: existing.container_id });
     }
 
+    await makeRoomFor(userId, problem);
+
     const session = await createContainer(problem, userId);
-    sessions.set(session.id, session);
-    await waitForHttp(session.previewUrl, config.container.readyTimeoutMs);
+    await insertWorkspaceSession({
+      id: session.id,
+      userId,
+      problemId: problem.dbId,
+      containerId: session.containerId,
+      containerName: session.containerName,
+      hostPort: session.hostPort,
+    });
+    cache.set(session.id, session);
+    await waitForHttp(session.previewUrl, resourcesFor(problem).startupTimeoutMs);
     return session;
   })();
 
@@ -123,12 +196,31 @@ export async function startSession(problemSlug, userId) {
 }
 
 /** Returns the session only if it belongs to this user (otherwise: not found). */
-export function getSession(sessionId, userId) {
-  const session = sessions.get(sessionId);
-  if (!session || session.userId !== userId) {
+export async function getSession(sessionId, userId) {
+  if (typeof sessionId !== 'string' || !UUID_PATTERN.test(sessionId)) {
+    throw new HttpError(404, 'Session not found. Start a new session.');
+  }
+
+  let session = cache.get(sessionId);
+  if (!session) {
+    const row = await findWorkspaceSession(sessionId);
+    if (row) {
+      session = await sessionFromRow(row);
+      cache.set(session.id, session);
+    }
+  }
+
+  if (!session || session.userId !== String(userId)) {
     throw new HttpError(404, 'Session not found. Start a new session.');
   }
   return session;
+}
+
+/** Records user activity (throttled), which keeps the container from being stopped as idle. */
+export async function touchSession(session) {
+  if (Date.now() - session.lastTouchedAt < config.sessions.touchThrottleMs) return;
+  session.lastTouchedAt = Date.now();
+  await touchWorkspaceSession(session.id).catch(() => {});
 }
 
 export function getSessionContainer(session) {
@@ -137,7 +229,7 @@ export function getSessionContainer(session) {
 
 /** Restarts the container (the app restarts; files in the volumes are kept). */
 export async function restartSession(sessionId, userId) {
-  const session = getSession(sessionId, userId);
+  const session = await getSession(sessionId, userId);
   const container = getSessionContainer(session);
 
   await container.restart({ t: 1 });
@@ -145,67 +237,58 @@ export async function restartSession(sessionId, userId) {
   // Docker may hand out a different host port after a restart.
   session.hostPort = await readHostPort(container, session.problem);
   session.previewUrl = `http://localhost:${session.hostPort}`;
-  await waitForHttp(session.previewUrl, config.container.readyTimeoutMs);
+  await updateWorkspaceSessionPort(session.id, session.hostPort);
+  await waitForHttp(session.previewUrl, resourcesFor(session.problem).startupTimeoutMs);
   return session;
-}
-
-async function removeContainer(session) {
-  try {
-    await docker.getContainer(session.containerId).remove({ force: true });
-  } catch (error) {
-    if (error.statusCode !== 404) throw error;
-  }
 }
 
 /** Deletes the container. With reset=true the user's saved work is deleted too. */
 export async function stopSession(sessionId, userId, { reset = false } = {}) {
-  const session = getSession(sessionId, userId);
+  const session = await getSession(sessionId, userId);
+  await endSession(session);
+  if (reset) await removeVolumes(session.userId, session.problem);
+}
 
-  await removeContainer(session);
-  sessions.delete(sessionId);
+/** "Reset problem": throws away the user's changes and starts again from the original code. */
+export async function resetSession(sessionId, userId) {
+  const session = await getSession(sessionId, userId);
+  await stopSession(sessionId, userId, { reset: true });
+  return startSession(session.problemId, userId);
+}
 
-  if (reset) {
-    for (const dir of session.problem.editable) {
-      await docker
-        .getVolume(volumeName(session.userId, session.problemId, dir))
-        .remove()
-        .catch(() => {});
-    }
+/** Stops containers that have been idle too long (or have run too long). Their files are kept. */
+export async function reapIdleSessions() {
+  const expired = await listExpiredWorkspaceSessions(config.sessions);
+  for (const row of expired) {
+    const idleMinutes = Math.round((Date.now() - new Date(row.last_active_at)) / 60_000);
+    await endSession({ id: row.id, containerId: row.container_id }, `idle for ${idleMinutes} min`).catch((error) =>
+      console.error(`Could not stop session ${row.id}:`, error.message),
+    );
   }
+  return expired.length;
 }
 
 /**
- * On backend start-up, picks up containers that are still running from before
- * (e.g. after a `--watch` reload) and removes stopped or unknown leftovers.
+ * On backend start-up: keeps sessions whose containers are still running, forgets
+ * sessions whose containers are gone, and removes containers no session knows about.
  */
 export async function restoreSessions() {
-  const containers = await docker.listContainers({ all: true, filters: { label: [LABELS.session] } });
+  const known = new Set();
 
-  for (const info of containers) {
-    const container = docker.getContainer(info.Id);
-    const userId = info.Labels[LABELS.user];
-    const problem = await getProblem(info.Labels[LABELS.problem]).catch(() => null);
-    const port = problem && info.Ports.find((p) => p.PrivatePort === problem.port && p.PublicPort);
-
-    // Stopped, unknown problem, or a leftover from the pre-login "demo" user.
-    if (info.State !== 'running' || !port || !/^\d+$/.test(userId)) {
-      await container.remove({ force: true }).catch(() => {});
-      continue;
+  for (const row of await listAllWorkspaceSessions()) {
+    if (await isRunning(row.container_id)) {
+      known.add(row.container_id);
+    } else {
+      await endSession({ id: row.id, containerId: row.container_id });
     }
-
-    const session = buildSession({
-      id: info.Labels[LABELS.session],
-      userId,
-      problem,
-      containerId: info.Id,
-      containerName: info.Names[0].replace(/^\//, ''),
-      hostPort: port.PublicPort,
-      createdAt: new Date(info.Created * 1000).toISOString(),
-    });
-    sessions.set(session.id, session);
   }
 
-  return sessions.size;
+  const containers = await docker.listContainers({ all: true, filters: { label: [LABELS.session] } });
+  for (const info of containers) {
+    if (!known.has(info.Id)) await removeContainer(info.Id);
+  }
+
+  return known.size;
 }
 
 export function toPublicSession(session) {
@@ -215,5 +298,6 @@ export function toPublicSession(session) {
     containerName: session.containerName,
     previewUrl: session.previewUrl,
     createdAt: session.createdAt,
+    idleMinutes: config.sessions.idleMinutes,
   };
 }

@@ -2,6 +2,7 @@
 
 import Editor from '@monaco-editor/react';
 import { useEffect, useRef, useState } from 'react';
+import Button from '@/components/ui/Button';
 import Icon from '@/components/ui/Icon';
 import PanelHeader from '@/components/ui/PanelHeader';
 import Spinner from '@/components/ui/Spinner';
@@ -12,7 +13,17 @@ import styles from './EditorPane.module.css';
 
 const HEADER_TABS = [{ id: 'code', label: 'Code', icon: 'code', iconColor: 'var(--icon-green)' }];
 
-export default function EditorPane({ files, activeFile, savingPath, saveState, onSelect, onClose, onChange, onSave }) {
+export default function EditorPane({
+  files,
+  activeFile,
+  savingPath,
+  saveState,
+  onSelect,
+  onClose,
+  onChange,
+  onSave,
+  onReset,
+}) {
   const monacoRef = useRef(null);
   const activePathRef = useRef(null);
   const onSaveRef = useRef(onSave);
@@ -44,7 +55,9 @@ export default function EditorPane({ files, activeFile, savingPath, saveState, o
 
   return (
     <div className={styles.pane}>
-      <PanelHeader tabs={HEADER_TABS} />
+      <PanelHeader tabs={HEADER_TABS}>
+        <Button variant="ghost" size="sm" icon="undo" onClick={onReset} title="Reset to the original code" />
+      </PanelHeader>
 
       <EditorTabs
         files={files}

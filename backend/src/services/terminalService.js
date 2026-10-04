@@ -1,5 +1,5 @@
 import { StringDecoder } from 'node:string_decoder';
-import { getSessionContainer } from './sessionService.js';
+import { getSessionContainer, touchSession } from './sessionService.js';
 
 // Browser terminal <-> WebSocket <-> `docker exec -it <container> sh`
 //
@@ -37,6 +37,7 @@ export async function openTerminal(ws, session) {
   const handle = (message) => {
     if (message.type === 'input' && typeof message.data === 'string') {
       stream.write(message.data);
+      touchSession(session); // typing in the terminal counts as activity
     } else if (message.type === 'resize' && message.cols > 0 && message.rows > 0) {
       exec.resize({ w: message.cols, h: message.rows }).catch(() => {});
     }
@@ -54,7 +55,8 @@ export async function openTerminal(ws, session) {
   });
 
   exec = await container.exec({
-    Cmd: ['/bin/sh'],
+    // bash when the image has it (Python/Java images), otherwise sh (Alpine Node images).
+    Cmd: ['/bin/sh', '-c', 'if command -v bash >/dev/null 2>&1; then exec bash --norc --noprofile; else exec sh; fi'],
     AttachStdin: true,
     AttachStdout: true,
     AttachStderr: true,

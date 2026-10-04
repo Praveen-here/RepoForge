@@ -79,19 +79,34 @@
   color: var(--text-faint);
 }
 
-.select {
+.reset {
   height: 36px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   padding: 0 12px;
   border: none;
   border-radius: var(--radius);
-  background: var(--fill);
-  color: var(--text);
+  background: transparent;
+  color: var(--text-muted);
   font-size: 14px;
   cursor: pointer;
+  animation: fade-in 120ms ease-out;
+  transition: background var(--transition), color var(--transition);
 }
 
-.select option {
-  background: #303030;
+.reset:hover {
+  background: var(--fill);
+  color: var(--text);
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 /* ---------- Table (LeetCode's striped rows) ---------- */

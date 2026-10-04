@@ -1,3 +1,5 @@
+import fs from 'node:fs/promises';
+import path from 'node:path';
 import tar from 'tar-stream';
 import { HttpError } from './HttpError.js';
 
@@ -55,4 +57,67 @@ export function readFirstFile(archiveStream, maxBytes) {
     archiveStream.on('error', reject);
     archiveStream.pipe(extract);
   });
+}
+
+/** Reads every regular file out of a tar stream: [{ name, content }]. */
+export function readAllFiles(archiveStream, maxBytesTotal) {
+  return new Promise((resolve, reject) => {
+    const extract = tar.extract();
+    const files = [];
+    let total = 0;
+
+    extract.on('entry', (header, stream, next) => {
+      if (header.type !== 'file') {
+        stream.on('end', next);
+        stream.resume();
+        return;
+      }
+      total += header.size;
+      if (total > maxBytesTotal) {
+        stream.resume();
+        extract.destroy(new HttpError(413, 'Archive is too large'));
+        return;
+      }
+      const chunks = [];
+      stream.on('data', (chunk) => chunks.push(chunk));
+      stream.on('end', () => {
+        files.push({ name: header.name, content: Buffer.concat(chunks) });
+        next();
+      });
+    });
+
+    extract.on('finish', () => resolve(files));
+    extract.on('error', reject);
+    archiveStream.on('error', reject);
+    archiveStream.pipe(extract);
+  });
+}
+
+/**
+ * Packs a folder from this machine into a tar archive whose entries start with
+ * `prefix/` (e.g. "src/..."), ready for container.putArchive().
+ */
+export async function packDirectory(dir, prefix, { uid = NODE_UID, gid = NODE_GID } = {}) {
+  const pack = tar.pack();
+  const chunks = [];
+  pack.on('data', (chunk) => chunks.push(chunk));
+  const done = new Promise((resolve, reject) => {
+    pack.on('end', resolve);
+    pack.on('error', reject);
+  });
+
+  const walk = async (current, entryPath) => {
+    pack.entry({ name: `${entryPath}/`, type: 'directory', mode: 0o755, uid, gid });
+    for (const item of await fs.readdir(current, { withFileTypes: true })) {
+      const full = path.join(current, item.name);
+      const name = `${entryPath}/${item.name}`;
+      if (item.isDirectory()) await walk(full, name);
+      else if (item.isFile()) pack.entry({ name, mode: 0o644, uid, gid }, await fs.readFile(full));
+    }
+  };
+
+  await walk(dir, prefix);
+  pack.finalize();
+  await done;
+  return Buffer.concat(chunks);
 }

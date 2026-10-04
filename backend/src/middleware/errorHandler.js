@@ -15,6 +15,10 @@ export function errorHandler(err, req, res, next) {
   if (err.code === 'ENOENT' && err.syscall === 'connect') {
     return res.status(503).json({ message: 'Docker is not running. Start Docker Desktop and try again.' });
   }
+  // The session's container was stopped (e.g. Docker restarted) while the session still existed.
+  if (err.statusCode === 409 && /is not running/i.test(err.message || '')) {
+    return res.status(410).json({ message: 'Your environment has stopped. Restart it to continue.' });
+  }
   if (err.code === 'ECONNREFUSED' && err.port === 5432) {
     return res.status(503).json({ message: 'The database is not reachable. Is PostgreSQL running?' });
   }

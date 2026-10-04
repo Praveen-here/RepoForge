@@ -1,0 +1,93 @@
+.backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  background: rgba(0, 0, 0, 0.6);
+  animation: fade 120ms ease-out;
+}
+
+.dialog {
+  width: 100%;
+  max-width: 420px;
+  padding: 22px 22px 18px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: #282828;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.55);
+  animation: pop 140ms ease-out;
+}
+
+.title {
+  margin: 0 0 8px;
+  font-size: 17px;
+  font-weight: 600;
+}
+
+.message {
+  margin: 0 0 20px;
+  color: var(--text-muted);
+  line-height: 22px;
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.cancel,
+.confirm {
+  height: 34px;
+  padding: 0 16px;
+  border: none;
+  border-radius: var(--radius);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background var(--transition), filter var(--transition);
+}
+
+.cancel {
+  background: var(--fill);
+  color: var(--text);
+}
+
+.cancel:hover {
+  background: var(--fill-hover);
+}
+
+.confirm {
+  background: var(--accent);
+  color: #1a1a1a;
+}
+
+.danger {
+  background: var(--danger);
+  color: #fff;
+}
+
+.confirm:hover {
+  filter: brightness(1.1);
+}
+
+.cancel:focus-visible,
+.confirm:focus-visible {
+  outline: 2px solid var(--handle);
+  outline-offset: 2px;
+}
+
+@keyframes fade {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes pop {
+  from {
+    opacity: 0;
+    transform: scale(0.97);
+  }
+}

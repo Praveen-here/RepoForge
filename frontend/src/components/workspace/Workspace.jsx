@@ -9,6 +9,7 @@ import BottomPanel from '@/components/panel/BottomPanel';
 import PreviewPane from '@/components/preview/PreviewPane';
 import SubmissionList from '@/components/submissions/SubmissionList';
 import Button from '@/components/ui/Button';
+import ConfirmDialog from '@/components/ui/ConfirmDialog';
 import PanelHeader from '@/components/ui/PanelHeader';
 import Resizer from '@/components/ui/Resizer';
 import { useFileTree } from '@/hooks/useFileTree';
@@ -30,16 +31,36 @@ const LEFT_TABS = [
 ];
 
 export default function Workspace({ problemId }) {
-  const { phase, problem, session, error, retry, restart, restarting } = useWorkspaceSession(problemId);
+  const { phase, problem, session, error, retry, restart, restarting, resetProblem } =
+    useWorkspaceSession(problemId);
 
   if (phase !== 'ready') {
-    return <LaunchScreen problemId={problemId} error={phase === 'error' ? error : null} onRetry={retry} />;
+    return (
+      <LaunchScreen
+        problemId={problemId}
+        error={phase === 'error' ? error : null}
+        lost={phase === 'lost'}
+        idleMinutes={session?.idleMinutes}
+        onRetry={retry}
+      />
+    );
   }
 
-  return <WorkspaceLayout problem={problem} session={session} restart={restart} restarting={restarting} />;
+  // A new session (e.g. after "Reset problem") remounts the layout so the editor,
+  // terminal and preview all reconnect to the fresh container.
+  return (
+    <WorkspaceLayout
+      key={session.id}
+      problem={problem}
+      session={session}
+      restart={restart}
+      restarting={restarting}
+      resetProblem={resetProblem}
+    />
+  );
 }
 
-function WorkspaceLayout({ problem, session, restart, restarting }) {
+function WorkspaceLayout({ problem, session, restart, restarting, resetProblem }) {
   const fileTree = useFileTree(session.id);
   const editor = useOpenFiles(session.id);
 
@@ -53,6 +74,7 @@ function WorkspaceLayout({ problem, session, restart, restarting }) {
   const [previewReload, setPreviewReload] = useState(0);
   const [saveState, setSaveState] = useState('');
   const [submissionsVersion, setSubmissionsVersion] = useState(0);
+  const [confirmReset, setConfirmReset] = useState(false);
   const terminalRef = useRef(null);
 
   // Hidden panels stay mounted, so the terminal keeps its history and the preview keeps its page.
@@ -188,6 +210,7 @@ function WorkspaceLayout({ problem, session, restart, restarting }) {
               onClose={editor.closeFile}
               onChange={editor.updateContent}
               onSave={handleSave}
+              onReset={() => setConfirmReset(true)}
             />
           </section>
           {showPanel && <Resizer axis="y" onPointerDown={panel.onPointerDown} />}
@@ -216,6 +239,20 @@ function WorkspaceLayout({ problem, session, restart, restarting }) {
           />
         </section>
       </div>
+
+      {confirmReset && (
+        <ConfirmDialog
+          title="Reset this problem?"
+          message="All your changes will be deleted and the code goes back to the original version. Your past submissions are kept."
+          confirmLabel="Reset problem"
+          danger
+          onCancel={() => setConfirmReset(false)}
+          onConfirm={() => {
+            setConfirmReset(false);
+            resetProblem();
+          }}
+        />
+      )}
     </div>
   );
 }

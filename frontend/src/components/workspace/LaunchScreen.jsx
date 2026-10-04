@@ -4,7 +4,34 @@ import Logo from '@/components/ui/Logo';
 import Spinner from '@/components/ui/Spinner';
 import styles from './LaunchScreen.module.css';
 
-export default function LaunchScreen({ problemId, error, onRetry }) {
+/**
+ * Full-page states around the workspace:
+ *   loading -> starting the container
+ *   error   -> it could not start
+ *   lost    -> it was stopped (idle, or too many open problems); the code is saved
+ */
+export default function LaunchScreen({ problemId, error, lost, idleMinutes, onRetry }) {
+  if (lost) {
+    return (
+      <div className={styles.screen}>
+        <div className={styles.card}>
+          <div className={styles.pauseIcon}>
+            <Icon name="clock" size={26} />
+          </div>
+          <h1 className={styles.title}>Your environment was paused</h1>
+          <p className={styles.text}>
+            To save resources, environments stop after {idleMinutes || 20} minute{idleMinutes === 1 ? '' : 's'} without
+            activity, or when you
+            open more than 2 problems at once. <strong>Your code is saved.</strong>
+          </p>
+          <Button variant="primary" icon="play" onClick={onRetry}>
+            Restart environment
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className={styles.screen}>
       <div className={styles.card}>

@@ -31,6 +31,27 @@
   color: var(--text-muted);
 }
 
+.text {
+  margin: 0 0 22px;
+  font-size: 14px;
+  line-height: 22px;
+  color: var(--text-muted);
+}
+
+.text strong {
+  color: var(--text);
+}
+
+.pauseIcon {
+  width: 56px;
+  height: 56px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
 .steps {
   list-style: none;
   margin: 0;

@@ -4,11 +4,18 @@ import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
 import Icon from '@/components/ui/Icon';
 import Spinner from '@/components/ui/Spinner';
+import { usePersistentState } from '@/hooks/usePersistentState';
 import { api } from '@/lib/api';
+import { activeRows, createFilters, matchesFilters } from '@/lib/problemFilters';
+import FilterPanel from './FilterPanel';
 import styles from './ProblemList.module.css';
 
 const FRAMEWORK_LABELS = { express: 'Express.js', django: 'Django', spring: 'Spring Boot' };
-const DIFFICULTIES = ['Easy', 'Medium', 'Hard'];
+const DIFFICULTY_OPTIONS = [
+  { value: 'Easy', label: 'Easy', color: 'var(--easy)' },
+  { value: 'Medium', label: 'Medium', color: 'var(--medium)' },
+  { value: 'Hard', label: 'Hard', color: 'var(--hard)' },
+];
 
 function StatusIcon({ status }) {
   if (status === 'solved') {
@@ -23,9 +30,15 @@ function StatusIcon({ status }) {
 export default function ProblemList() {
   const [problems, setProblems] = useState(null);
   const [error, setError] = useState(null);
-  const [search, setSearch] = useState('');
-  const [difficulty, setDifficulty] = useState('');
-  const [framework, setFramework] = useState('');
+  // Remembered for this tab, so they are still applied after opening a problem and coming back.
+  const [search, setSearch] = usePersistentState('repo-forge.problemSearch', '', { storage: 'session' });
+  const [filters, setFilters] = usePersistentState('repo-forge.problemFilters', createFilters, { storage: 'session' });
+
+  const filtersActive = Boolean(search.trim() || activeRows(filters).length);
+  const resetAll = () => {
+    setSearch('');
+    setFilters(createFilters());
+  };
 
   useEffect(() => {
     api
@@ -34,17 +47,26 @@ export default function ProblemList() {
       .catch((err) => setError(err.message));
   }, []);
 
-  const frameworks = useMemo(() => [...new Set((problems || []).map((p) => p.framework))], [problems]);
+  const filterFields = useMemo(() => {
+    const frameworks = [...new Set((problems || []).map((p) => p.framework))];
+    return {
+      difficulty: { label: 'Difficulty', icon: 'gauge', options: DIFFICULTY_OPTIONS },
+      framework: {
+        label: 'Framework',
+        icon: 'code',
+        options: frameworks.map((f) => ({ value: f, label: FRAMEWORK_LABELS[f] || f })),
+      },
+    };
+  }, [problems]);
 
   const visible = useMemo(() => {
     const query = search.trim().toLowerCase();
     return (problems || []).filter(
       (p) =>
         (!query || `${p.number}. ${p.title} ${p.tags.join(' ')}`.toLowerCase().includes(query)) &&
-        (!difficulty || p.difficulty === difficulty) &&
-        (!framework || p.framework === framework),
+        matchesFilters(p, filters),
     );
-  }, [problems, search, difficulty, framework]);
+  }, [problems, search, filters]);
 
   const solved = (problems || []).filter((p) => p.status === 'solved').length;
   const total = problems?.length || 0;
@@ -87,32 +109,18 @@ export default function ProblemList() {
             aria-label="Search questions"
           />
         </label>
-        <select
-          className={styles.select}
-          value={difficulty}
-          onChange={(e) => setDifficulty(e.target.value)}
-          aria-label="Difficulty"
-        >
-          <option value="">Difficulty</option>
-          {DIFFICULTIES.map((d) => (
-            <option key={d} value={d}>
-              {d}
-            </option>
-          ))}
-        </select>
-        <select
-          className={styles.select}
-          value={framework}
-          onChange={(e) => setFramework(e.target.value)}
-          aria-label="Framework"
-        >
-          <option value="">Framework</option>
-          {frameworks.map((f) => (
-            <option key={f} value={f}>
-              {FRAMEWORK_LABELS[f] || f}
-            </option>
-          ))}
-        </select>
+        <FilterPanel
+          filters={filters}
+          onChange={setFilters}
+          onReset={() => setFilters(createFilters())}
+          fields={filterFields}
+        />
+        {filtersActive && (
+          <button type="button" className={styles.reset} onClick={resetAll}>
+            <Icon name="x" size={14} strokeWidth={2} />
+            Reset
+          </button>
+        )}
       </div>
 
       {error && <p className={styles.error}>{error}</p>}

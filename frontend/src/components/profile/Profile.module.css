@@ -1,0 +1,580 @@
+/* Profile page, laid out like LeetCode's: sidebar card + stat cards. */
+
+.page {
+  max-width: 1240px;
+  margin: 0 auto;
+  padding: 28px 20px 48px;
+  display: grid;
+  grid-template-columns: 300px minmax(0, 1fr);
+  gap: 18px;
+  align-items: start;
+}
+
+.main {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  min-width: 0;
+}
+
+.twoColumns {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.card {
+  border-radius: var(--radius);
+  background: #282828;
+  padding: 18px 20px;
+}
+
+.message {
+  display: flex;
+  justify-content: center;
+  padding: 64px 16px;
+  color: var(--text-muted);
+}
+
+.label {
+  display: block;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.bigNumber {
+  display: block;
+  font-size: 28px;
+  line-height: 36px;
+  font-weight: 500;
+}
+
+/* ---------- Sidebar ---------- */
+
+.identity {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+}
+
+.avatarBox > * {
+  border-radius: 8px !important;
+}
+
+.names {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.name {
+  font-size: 17px;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.username {
+  font-size: 13px;
+  color: var(--text-muted);
+  margin-bottom: 14px;
+}
+
+.rank {
+  font-size: 15px;
+  color: var(--text-muted);
+}
+
+.rank strong {
+  color: var(--text);
+  font-size: 17px;
+}
+
+.editButton {
+  width: 100%;
+  height: 38px;
+  margin-top: 18px;
+  border: none;
+  border-radius: var(--radius);
+  background: rgba(44, 187, 93, 0.15);
+  color: var(--success);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background var(--transition);
+}
+
+.editButton:hover {
+  background: rgba(44, 187, 93, 0.25);
+}
+
+.divider {
+  height: 1px;
+  margin: 20px 0;
+  background: var(--border);
+}
+
+.sectionTitle {
+  margin: 0 0 14px;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.statList,
+.frameworkList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.statList li {
+  display: grid;
+  grid-template-columns: 22px 1fr auto;
+  align-items: center;
+  gap: 10px;
+  color: var(--text-muted);
+}
+
+.statList strong {
+  color: var(--text);
+  font-weight: 600;
+}
+
+.statIconGold {
+  color: var(--warning);
+}
+.statIconGreen {
+  color: var(--success);
+}
+.statIconBlue {
+  color: var(--icon-blue);
+}
+
+.frameworkList li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.pill {
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: var(--fill-pill);
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.frameworkCount {
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.frameworkCount strong {
+  color: var(--text);
+}
+
+/* ---------- Score card ---------- */
+
+.scoreCard {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 220px;
+  gap: 24px;
+}
+
+.scoreLeft {
+  min-width: 0;
+}
+
+.scoreRow {
+  display: flex;
+  gap: 32px;
+  flex-wrap: wrap;
+}
+
+.ranking {
+  display: block;
+  margin-top: 8px;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.ranking span {
+  color: var(--text-faint);
+  font-weight: 400;
+}
+
+.chart {
+  margin-top: 12px;
+}
+
+.chartSvg {
+  width: 100%;
+  height: 110px;
+  display: block;
+}
+
+.chartAxis {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 6px;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.chartEmpty {
+  margin: 28px 0 8px;
+  color: var(--text-faint);
+}
+
+.scoreRight {
+  padding-left: 24px;
+  border-left: 1px solid var(--border);
+}
+
+.scoreHint {
+  margin: 14px 0 0;
+  font-size: 12px;
+  line-height: 18px;
+  color: var(--text-faint);
+}
+
+/* ---------- Solved card (gauge) ---------- */
+
+.solvedCard {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.gauge {
+  position: relative;
+  width: 180px;
+  height: 180px;
+  flex-shrink: 0;
+}
+
+.gaugeCenter {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.gaugeNumber {
+  font-size: 30px;
+  font-weight: 600;
+}
+
+.gaugeNumber span {
+  font-size: 15px;
+  font-weight: 400;
+  color: var(--text-muted);
+}
+
+.gaugeLabel {
+  font-size: 14px;
+}
+
+.tick {
+  color: var(--success);
+}
+
+.attempting {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 10px;
+  text-align: center;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.levels {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1;
+  max-width: 120px;
+}
+
+.level {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 8px 4px;
+  border-radius: var(--radius);
+  background: var(--fill);
+  font-size: 12px;
+}
+
+.level strong {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+/* ---------- Badges ---------- */
+
+.badgesCard {
+  display: flex;
+  flex-direction: column;
+}
+
+.badgeRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 14px 0 16px;
+}
+
+.badge {
+  position: relative;
+  width: 64px;
+  height: 70px;
+}
+
+.badgeLocked {
+  filter: grayscale(1);
+  opacity: 0.25;
+}
+
+.badgeIcon {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: #fff;
+}
+
+.badgeName {
+  margin-top: 4px;
+  font-size: 16px;
+  font-weight: 500;
+}
+
+.badgeName span {
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+/* ---------- Heatmap ---------- */
+
+.heatmapHeader {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.heatmapHeader h3 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 400;
+  color: var(--text-muted);
+}
+
+.heatmapHeader h3 strong {
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.heatmapStats {
+  display: flex;
+  gap: 18px;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.heatmapStats strong {
+  color: var(--text);
+}
+
+.heatmapScroll {
+  overflow-x: auto;
+  padding-bottom: 4px;
+}
+
+.heatmap {
+  display: flex;
+  gap: 3px;
+  width: max-content;
+  padding-top: 18px;
+}
+
+.week {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.month {
+  position: absolute;
+  top: -18px;
+  left: 0;
+  font-size: 11px;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.cell {
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+}
+
+.level0 {
+  background: rgba(255, 255, 255, 0.07);
+}
+.level1 {
+  background: rgba(44, 187, 93, 0.3);
+}
+.level2 {
+  background: rgba(44, 187, 93, 0.55);
+}
+.level3 {
+  background: rgba(44, 187, 93, 0.8);
+}
+.level4 {
+  background: #2cbb5d;
+}
+
+.legend {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 4px;
+  margin-top: 10px;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+/* ---------- Recent AC ---------- */
+
+.recentHeader {
+  margin-bottom: 12px;
+}
+
+.recentTab {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  border-radius: var(--radius);
+  background: var(--fill);
+  font-weight: 600;
+}
+
+.recentTab svg {
+  color: var(--success);
+}
+
+.recentList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.recentList li:nth-child(odd) .recentRow {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.recentRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: var(--radius);
+  color: var(--text);
+  text-decoration: none;
+}
+
+.recentRow:hover .recentTitle {
+  color: var(--handle);
+}
+
+.recentTitle {
+  font-weight: 500;
+  transition: color var(--transition);
+}
+
+.recentWhen {
+  flex-shrink: 0;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.empty {
+  margin: 8px 0;
+  color: var(--text-muted);
+}
+
+/* ---------- Edit profile dialog ---------- */
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 14px;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.field input {
+  height: 38px;
+  padding: 0 12px;
+  border: 1px solid transparent;
+  border-radius: var(--radius);
+  background: var(--fill);
+  color: var(--text);
+  font-size: 14px;
+  outline: none;
+}
+
+.field input:focus {
+  border-color: var(--handle);
+}
+
+.fieldHint {
+  font-size: 12px;
+  color: var(--text-faint);
+}
+
+.formError {
+  margin: 0 0 14px;
+  padding: 8px 12px;
+  border-radius: var(--radius);
+  background: var(--danger-soft);
+  color: var(--danger);
+  font-size: 13px;
+}
+
+/* ---------- Narrow screens ---------- */
+
+@media (max-width: 960px) {
+  .page {
+    grid-template-columns: 1fr;
+  }
+  .twoColumns {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .scoreCard {
+    grid-template-columns: 1fr;
+  }
+  .scoreRight {
+    padding-left: 0;
+    border-left: none;
+  }
+}

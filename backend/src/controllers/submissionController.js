@@ -1,7 +1,9 @@
-import { getSession } from '../services/sessionService.js';
+import { getSession, touchSession } from '../services/sessionService.js';
 import { submitSession } from '../services/submissionService.js';
 
 export async function submit(req, res) {
-  const submission = await submitSession(getSession(req.params.sessionId, req.user.id));
+  const session = await getSession(req.params.sessionId, req.user.id);
+  await touchSession(session);
+  const submission = await submitSession(session);
   res.status(201).json({ submission });
 }

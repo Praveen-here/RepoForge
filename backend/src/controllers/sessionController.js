@@ -1,10 +1,12 @@
 import { HttpError } from '../utils/HttpError.js';
 import {
   getSession,
+  resetSession,
   restartSession,
   startSession,
   stopSession,
   toPublicSession,
+  touchSession,
 } from '../services/sessionService.js';
 
 export async function createSession(req, res) {
@@ -17,12 +19,24 @@ export async function createSession(req, res) {
   res.status(201).json({ session: toPublicSession(session) });
 }
 
-export function getSessionById(req, res) {
-  res.json({ session: toPublicSession(getSession(req.params.sessionId, req.user.id)) });
+export async function getSessionById(req, res) {
+  res.json({ session: toPublicSession(await getSession(req.params.sessionId, req.user.id)) });
+}
+
+/** POST /api/sessions/:id/heartbeat: the browser says "the user is still working". */
+export async function heartbeat(req, res) {
+  await touchSession(await getSession(req.params.sessionId, req.user.id));
+  res.status(204).end();
 }
 
 export async function restart(req, res) {
   const session = await restartSession(req.params.sessionId, req.user.id);
+  res.json({ session: toPublicSession(session) });
+}
+
+/** POST /api/sessions/:id/reset: back to the original code (the user's changes are deleted). */
+export async function reset(req, res) {
+  const session = await resetSession(req.params.sessionId, req.user.id);
   res.json({ session: toPublicSession(session) });
 }
 

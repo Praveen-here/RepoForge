@@ -46,6 +46,15 @@ export const config = {
     windowMinutes: 15, // ...every 15 minutes
   },
 
+  // Workspace containers (Phase 3 reliability).
+  sessions: {
+    idleMinutes: Number(process.env.SESSION_IDLE_MINUTES) || 20, // no activity for this long -> container stopped
+    maxLifetimeHours: 3, // hard limit, even while active
+    maxPerUser: 2, // running containers per user; the least recently used one is closed first
+    reaperIntervalMs: 60_000, // how often idle containers are looked for
+    touchThrottleMs: 30_000, // write "last active" to the database at most this often per session
+  },
+
   container: {
     memoryBytes: 512 * 1024 * 1024,
     nanoCpus: 1_000_000_000, // 1 CPU
@@ -55,7 +64,8 @@ export const config = {
 
   files: {
     maxReadBytes: 1024 * 1024,
-    excluded: ['node_modules', '.grader', '.git'],
+    // Hidden from the file explorer: dependencies, build output, caches, hidden tests.
+    excluded: ['node_modules', '.grader', '.git', 'target', '__pycache__', '.pytest_cache', 'db.sqlite3'],
   },
 };
 

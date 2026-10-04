@@ -2,16 +2,19 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import { config } from '../config/index.js';
 import { HttpError } from '../utils/HttpError.js';
-import { packFiles, readFirstFile } from '../utils/tar.js';
+import { packDirectory, packFiles, readAllFiles } from '../utils/tar.js';
+import { parseJestJson, parseJUnitXml } from '../utils/testReports.js';
 import { docker, execInContainer } from './docker.js';
+import { resourcesFor } from './problemService.js';
 import { getSessionContainer } from './sessionService.js';
 
 const posix = path.posix;
 
-// Grading runs in a fresh, short-lived container built from the clean problem image:
-//   1. copy in only the user's editable folders
+// Grading runs in a fresh, short-lived, network-less container built from the clean
+// problem image:
+//   1. copy in only the code being graded (the editable folders)
 //   2. copy in the hidden tests
-//   3. run the test command, read the JSON report, delete the container
+//   3. run the test command, read the report, delete the container
 // The user's own container never sees the hidden tests.
 
 async function loadHiddenTests(problemId) {
@@ -29,13 +32,32 @@ async function loadHiddenTests(problemId) {
   );
 }
 
-async function copyUserFiles(problem, fromContainer, toContainer) {
-  for (const dir of problem.editable) {
-    const target = posix.join(problem.rootDir, dir);
-    await execInContainer(toContainer, ['rm', '-rf', target], { user: 'root' });
-    const archive = await fromContainer.getArchive({ path: target });
-    await toContainer.putArchive(archive, { path: posix.dirname(target) });
-  }
+async function clearEditable(problem, grader, dir) {
+  const target = posix.join(problem.rootDir, dir);
+  await execInContainer(grader, ['rm', '-rf', target], { user: 'root' });
+  return target;
+}
+
+/** Copies the editable folders from a user's session container. */
+function fromContainer(source) {
+  return async (problem, grader) => {
+    for (const dir of problem.editable) {
+      const target = await clearEditable(problem, grader, dir);
+      const archive = await source.getArchive({ path: target });
+      await grader.putArchive(archive, { path: posix.dirname(target) });
+    }
+  };
+}
+
+/** Copies the editable folders from a problem folder on this machine (used by the validator). */
+export function fromDirectory(problemDir) {
+  return async (problem, grader) => {
+    for (const dir of problem.editable) {
+      const target = await clearEditable(problem, grader, dir);
+      const archive = await packDirectory(path.join(problemDir, dir), posix.basename(target));
+      await grader.putArchive(archive, { path: posix.dirname(target) });
+    }
+  };
 }
 
 async function copyHiddenTests(problem, container) {
@@ -45,49 +67,47 @@ async function copyHiddenTests(problem, container) {
   await container.putArchive(archive, { path: target });
 }
 
-async function readReport(container, reportPath) {
+/** Reads the report file (or every .xml file in a report folder) and returns the tests. */
+async function readTests(container, test) {
+  let files;
   try {
-    const archive = await container.getArchive({ path: reportPath });
-    const content = await readFirstFile(archive, 5 * 1024 * 1024);
-    return content ? JSON.parse(content.toString('utf8')) : null;
+    files = await readAllFiles(await container.getArchive({ path: test.reportPath }), 20 * 1024 * 1024);
   } catch {
-    return null;
+    return [];
+  }
+
+  try {
+    if (test.reportFormat === 'junit-xml') {
+      const xml = files.filter((file) => file.name.endsWith('.xml')).map((file) => file.content.toString('utf8'));
+      return parseJUnitXml(xml);
+    }
+    return files.length ? parseJestJson(files[0].content.toString('utf8')) : [];
+  } catch {
+    return [];
   }
 }
 
-// Only test names and pass/fail go back to the browser, never test code or error output.
-function summarize(report) {
-  const tests = report.testResults.flatMap((file) =>
-    file.assertionResults.map((assertion) => ({
-      name: [...assertion.ancestorTitles, assertion.title].join(' › '),
-      status: assertion.status,
-      durationMs: assertion.duration ?? 0,
-    })),
-  );
-  const passed = tests.filter((test) => test.status === 'passed').length;
-  return { passed, total: tests.length, tests };
-}
-
-export async function gradeSession(session) {
-  const { problem } = session;
+/**
+ * Grades one version of the code. `copyCode(problem, grader)` puts that code
+ * into the grading container. Only test names and pass/fail are returned,
+ * never test code or error output.
+ */
+export async function runGrading(problem, copyCode, { label = 'grading' } = {}) {
   const startedAt = Date.now();
+  const elapsed = () => Date.now() - startedAt;
 
   const grader = await docker.createContainer({
     Image: problem.image,
     Cmd: ['sleep', 'infinity'],
     WorkingDir: problem.workdir,
-    Labels: { 'repo-forge.grading': session.id },
+    Labels: { 'repo-forge.grading': label },
     NetworkDisabled: true,
-    HostConfig: {
-      Memory: config.container.memoryBytes,
-      NanoCpus: config.container.nanoCpus,
-      PidsLimit: config.container.pidsLimit,
-    },
+    HostConfig: resourcesFor(problem).hostConfig,
   });
 
   try {
     await grader.start();
-    await copyUserFiles(problem, getSessionContainer(session), grader);
+    await copyCode(problem, grader);
     await copyHiddenTests(problem, grader);
 
     try {
@@ -97,20 +117,24 @@ export async function gradeSession(session) {
       });
     } catch (error) {
       if (error.status === 504) {
-        return { status: 'timeout', passed: 0, total: 0, tests: [], durationMs: Date.now() - startedAt };
+        return { status: 'timeout', passed: 0, total: 0, tests: [], durationMs: elapsed() };
       }
       throw error;
     }
 
-    const report = await readReport(grader, problem.test.reportPath);
-    const summary = report ? summarize(report) : { passed: 0, total: 0, tests: [] };
+    const tests = (await readTests(grader, problem.test)).filter((test) => test.status !== 'skipped');
+    const passed = tests.filter((test) => test.status === 'passed').length;
 
     let status = 'failed';
-    if (summary.total === 0) status = 'error';
-    else if (summary.passed === summary.total) status = 'accepted';
+    if (tests.length === 0) status = 'error';
+    else if (passed === tests.length) status = 'accepted';
 
-    return { status, ...summary, durationMs: Date.now() - startedAt };
+    return { status, passed, total: tests.length, tests, durationMs: elapsed() };
   } finally {
     await grader.remove({ force: true }).catch(() => {});
   }
+}
+
+export function gradeSession(session) {
+  return runGrading(session.problem, fromContainer(getSessionContainer(session)), { label: session.id });
 }

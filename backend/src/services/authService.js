@@ -7,7 +7,22 @@ import {
   findUserByEmail,
   linkAccount,
   recordLogin,
+  usernameTaken,
 } from '../repositories/userRepository.js';
+
+export const USERNAME_PATTERN = /^[a-z0-9][a-z0-9_-]{2,19}$/;
+
+/** "Asha.K+test@x.com" -> "ashaktest", or "ashaktest42" if that is taken. */
+async function generateUsername(email, db) {
+  let base = email.split('@')[0].toLowerCase().replace(/[^a-z0-9_-]/g, '').slice(0, 16);
+  if (!USERNAME_PATTERN.test(base)) base = 'user';
+
+  if (base !== 'user' && !(await usernameTaken(base, db))) return base;
+  for (;;) {
+    const candidate = `${base}${Math.floor(1000 + Math.random() * 9000)}`;
+    if (!(await usernameTaken(candidate, db))) return candidate;
+  }
+}
 
 /**
  * Finds or creates the user for a sign-in, whichever method was used.
@@ -24,7 +39,11 @@ export async function signInWithProvider({ provider, providerUserId, email, name
       user = await findUserByEmail(normalizedEmail, db);
       if (!user) {
         const fallbackName = normalizedEmail.split('@')[0];
-        user = await createUser({ email: normalizedEmail, name: name?.trim() || fallbackName, avatarUrl }, db);
+        const username = await generateUsername(normalizedEmail, db);
+        user = await createUser(
+          { email: normalizedEmail, username, name: name?.trim() || fallbackName, avatarUrl },
+          db,
+        );
       }
       await linkAccount({ userId: user.id, provider, providerUserId }, db);
     }
@@ -64,5 +83,5 @@ export function sessionCookieOptions() {
 }
 
 export function toPublicUser(user) {
-  return { id: user.id, email: user.email, name: user.name, avatarUrl: user.avatar_url };
+  return { id: user.id, email: user.email, username: user.username, name: user.name, avatarUrl: user.avatar_url };
 }
