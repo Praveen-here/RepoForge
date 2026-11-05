@@ -1,6 +1,7 @@
 // Small inline SVG icon set (24x24 stroke icons), so the app needs no icon library.
 const PATHS = {
   chevronRight: 'M9 6l6 6-6 6',
+  bulb: 'M9 18h6 M10 21h4 M12 3a6.5 6.5 0 0 0-4 11.6c.7.6 1 1.3 1 2.1V17h6v-.3c0-.8.3-1.5 1-2.1A6.5 6.5 0 0 0 12 3z',
   code: 'M8.5 7l-5 5 5 5 M15.5 7l5 5-5 5',
   filter: 'M4 5h16l-6.2 7.6V18l-3.6 2v-7.4z',
   gauge: 'M4.2 17a8.5 8.5 0 1 1 15.6 0 M12 13.5l3.5-4',

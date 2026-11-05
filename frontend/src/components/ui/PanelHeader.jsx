@@ -3,8 +3,9 @@ import styles from './PanelHeader.module.css';
 
 /**
  * The header bar on top of every panel card.
- * tabs: [{ id, label, icon, iconColor, badge }]
+ * tabs: [{ id, label, icon, iconColor, badge, collapsible }]
  * With one tab it is a title; with several it switches views. `children` go on the right.
+ * In a narrow panel, inactive `collapsible` tabs show only their icon so every tab still fits.
  */
 export default function PanelHeader({ tabs, activeTab, onTabChange, children }) {
   return (
@@ -19,11 +20,13 @@ export default function PanelHeader({ tabs, activeTab, onTabChange, children }) 
                 type="button"
                 role="tab"
                 aria-selected={isActive}
+                aria-label={tab.label}
+                title={tab.label}
                 className={`${styles.tab} ${isActive ? styles.active : ''}`}
                 onClick={() => onTabChange?.(tab.id)}
               >
                 <Icon name={tab.icon} size={16} strokeWidth={2} style={{ color: tab.iconColor }} />
-                {tab.label}
+                <span className={tab.collapsible ? styles.collapsible : undefined}>{tab.label}</span>
                 {tab.badge}
               </button>
             </div>

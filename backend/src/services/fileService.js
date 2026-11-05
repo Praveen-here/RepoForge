@@ -2,11 +2,14 @@ import path from 'node:path';
 import { config } from '../config/index.js';
 import { HttpError } from '../utils/HttpError.js';
 import { isEditable, resolveProblemPath, toRelativePath } from '../utils/paths.js';
-import { packFiles, readFirstFile } from '../utils/tar.js';
+import { packFiles, readAllFiles, readFirstFile } from '../utils/tar.js';
 import { execInContainer } from './docker.js';
 import { getSessionContainer } from './sessionService.js';
 
 const posix = path.posix;
+
+const MAX_SOURCE_BYTES = 10 * 1024 * 1024;
+const SOURCE_FILE = /\.(js|jsx|ts|tsx|mjs|cjs|py|java|html|css|json|properties|yml|yaml)$/i;
 
 // ---------- File tree ----------
 
@@ -105,6 +108,26 @@ export async function readFile(session, relPath) {
     content: content.toString('utf8'),
     editable: isEditable(problem, relativePath),
   };
+}
+
+/** The user's own source code: text files in the editable folders, as [{ path, content }]. */
+export async function readEditableSource(session) {
+  const { problem } = session;
+  const container = getSessionContainer(session);
+  const source = [];
+
+  for (const dir of problem.editable) {
+    const archive = await container.getArchive({ path: posix.join(problem.rootDir, dir) });
+    // Archive entries start at the folder's own name: "src/app.js" for "backend/src".
+    const parent = posix.dirname(dir);
+    for (const file of await readAllFiles(archive, MAX_SOURCE_BYTES)) {
+      const relativePath = posix.join(parent, file.name);
+      const skipped = relativePath.split('/').some((part) => config.files.excluded.includes(part));
+      if (skipped || !SOURCE_FILE.test(relativePath)) continue;
+      source.push({ path: relativePath, content: file.content.toString('utf8') });
+    }
+  }
+  return source;
 }
 
 export async function writeFile(session, relPath, content) {

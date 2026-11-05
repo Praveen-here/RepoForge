@@ -1,0 +1,230 @@
+.panel {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+}
+
+.center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  padding: 24px;
+  text-align: center;
+}
+
+.muted {
+  margin: 0;
+  color: var(--text-muted);
+}
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 38px;
+  padding: 4px 12px;
+  border-bottom: 1px solid var(--border-soft);
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.progress strong {
+  color: var(--accent);
+}
+
+.messages {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px;
+  overflow-y: auto;
+}
+
+.welcome {
+  margin: auto 0;
+  padding: 12px;
+  text-align: center;
+  color: var(--text-muted);
+}
+
+.welcome h3 {
+  margin: 0 0 6px;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.welcome p {
+  margin: 0;
+  font-size: 13px;
+}
+
+.message {
+  max-width: 92%;
+  padding: 8px 11px;
+  border-radius: var(--radius);
+  font-size: 13px;
+  line-height: 20px;
+  overflow-wrap: anywhere;
+}
+
+.user {
+  align-self: flex-end;
+  background: var(--accent-soft);
+  white-space: pre-wrap;
+}
+
+.coach {
+  align-self: flex-start;
+  background: var(--fill);
+}
+
+.thinking {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text-muted);
+}
+
+.hintBadge {
+  display: inline-block;
+  margin-bottom: 4px;
+  padding: 0 7px;
+  border-radius: 10px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.markdown p {
+  margin: 0 0 8px;
+}
+
+.markdown > :last-child {
+  margin-bottom: 0;
+}
+
+.markdown ul,
+.markdown ol {
+  margin: 0 0 8px;
+  padding-left: 18px;
+}
+
+.markdown h1,
+.markdown h2,
+.markdown h3,
+.markdown h4 {
+  margin: 0 0 6px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.markdown code {
+  padding: 1px 4px;
+  border-radius: 3px;
+  background: var(--fill-pill);
+  font-family: var(--font-mono);
+  font-size: 12px;
+}
+
+.markdown pre {
+  margin: 0 0 8px;
+  padding: 8px;
+  border-radius: var(--radius-xs);
+  background: rgba(0, 0, 0, 0.3);
+  overflow-x: auto;
+}
+
+.markdown pre code {
+  padding: 0;
+  background: none;
+}
+
+.error {
+  margin: 0;
+  font-size: 13px;
+  color: var(--danger);
+}
+
+.composer {
+  padding: 10px 12px;
+  border-top: 1px solid var(--border-soft);
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.chip {
+  padding: 3px 9px;
+  border: none;
+  border-radius: 12px;
+  background: var(--fill);
+  color: var(--text-muted);
+  font-size: 12px;
+  cursor: pointer;
+  transition: background var(--transition);
+}
+
+.chip:hover:not(:disabled) {
+  background: var(--fill-hover);
+  color: var(--text);
+}
+
+.chip:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.hintChip {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+.hintChip:hover:not(:disabled) {
+  color: var(--accent);
+}
+
+.inputRow {
+  display: flex;
+  align-items: flex-end;
+  gap: 6px;
+}
+
+.input {
+  flex: 1;
+  min-width: 0;
+  padding: 7px 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--fill);
+  color: var(--text);
+  font: inherit;
+  font-size: 13px;
+  line-height: 19px;
+  resize: none;
+  outline: none;
+}
+
+.input:focus {
+  border-color: var(--text-faint);
+}
+
+.input::placeholder {
+  color: var(--text-faint);
+}
+
+.notice {
+  margin: 8px 0 0;
+  font-size: 11px;
+  line-height: 15px;
+  color: var(--text-faint);
+}

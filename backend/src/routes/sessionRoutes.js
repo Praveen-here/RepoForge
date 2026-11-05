@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import { ask } from '../controllers/coachController.js';
 import { getContent, getTree, saveContent } from '../controllers/fileController.js';
 import {
   createSession,
@@ -24,5 +25,6 @@ router.get('/:sessionId/files/content', getContent);
 router.put('/:sessionId/files/content', saveContent);
 
 router.post('/:sessionId/submissions', submit);
+router.post('/:sessionId/coach', ask);
 
 export default router;

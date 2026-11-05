@@ -62,6 +62,22 @@ export const config = {
     readyTimeoutMs: 20_000, // how long to wait for the app inside to answer HTTP
   },
 
+  // AI debugging coach (Google Gemini). Without a key the coach is simply switched off.
+  coach: {
+    apiKey: process.env.GEMINI_API_KEY,
+    // Tried in order: when the first model is overloaded the next one answers.
+    models: (process.env.GEMINI_MODELS || 'gemini-3.6-flash,gemini-3.5-flash-lite,gemini-3.1-flash-lite')
+      .split(',')
+      .map((model) => model.trim())
+      .filter(Boolean),
+    requestTimeoutMs: 15_000,
+    maxOutputTokens: 2048,
+    maxQuestionsPerDay: Number(process.env.COACH_MAX_QUESTIONS_PER_DAY) || 40, // per user
+    maxQuestionLength: 1000,
+    historyMessages: 10, // earlier messages sent along with each question
+    maxContextChars: 60_000, // how much of the user's code is sent with each question
+  },
+
   files: {
     maxReadBytes: 1024 * 1024,
     // Hidden from the file explorer: dependencies, build output, caches, hidden tests.

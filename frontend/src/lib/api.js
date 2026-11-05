@@ -52,6 +52,11 @@ export const api = {
 
   submit: (sessionId) => request(`/sessions/${sessionId}/submissions`, { method: 'POST' }),
 
+  // AI debugging coach
+  getCoach: (problemId) => request(`/problems/${problemId}/coach`),
+  clearCoach: (problemId) => request(`/problems/${problemId}/coach`, { method: 'DELETE' }),
+  askCoach: (sessionId, question) => request(`/sessions/${sessionId}/coach`, { method: 'POST', body: question }),
+
   // Users
   getProfile: (username) => request(`/users/${encodeURIComponent(username)}/profile`),
   updateMe: (changes) => request('/users/me', { method: 'PATCH', body: changes }),

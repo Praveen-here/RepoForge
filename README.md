@@ -23,6 +23,18 @@ Submit                       ── REST ──►  gradingService  ── fresh
 - **One container per user per problem.** Editable folders are Docker volumes (`rf_<userId>_<problem>_<folder>`), so work survives restarts. Users can only reach their own sessions.
 - **Grading** runs in a separate, network-less container with the user's files and the hidden tests. The result is saved to `submissions`.
 
+## AI debugging coach
+
+The Coach tab guides users with questions and four increasingly specific hints, using Google Gemini on the backend. Set `GEMINI_API_KEY` in `backend/.env`; without it the coach is switched off. Its protections, in `backend/src/services/coach/`:
+
+- **It never sees the answer.** The hidden tests and `solution.patch` are never sent to the model.
+- **It doesn't see the code at first.** Code is only sent from hint 3 on, so early replies can't point at the bug.
+- **Every reply is checked in code.** `coachGuard.js` compares it with `solution.patch` on the server. A reply that leaks is re-asked once, then replaced with a stock reply. This is why replies don't stream.
+- **Off-topic questions get a fixed refusal**, so none of the model's wording gets through.
+- **Limits:** 40 questions per user per 24 hours, and one question at a time.
+
+Once a user's fix is accepted, the coach can discuss the solution freely.
+
 ## Folder structure
 
 ```
@@ -125,6 +137,8 @@ While the Google app is in **Testing** mode, only the test users listed in the G
 | GET | `/api/sessions/:id/files` | ✓ | File tree |
 | GET / PUT | `/api/sessions/:id/files/content` | ✓ | Read / save a file (editable folders only) |
 | POST | `/api/sessions/:id/submissions` | ✓ | Grade against the hidden tests and save the result |
+| POST | `/api/sessions/:id/coach` | ✓ | Ask the AI coach `{ message }` or `{ action }`, plus `activeFile` |
+| GET / DELETE | `/api/problems/:problemId/coach` | ✓ | Read the saved coach chat / start a new one |
 | WS | `/ws/terminal?sessionId=` | ✓ cookie | Interactive shell |
 | WS | `/ws/logs?sessionId=` | ✓ cookie | Live app output |
 

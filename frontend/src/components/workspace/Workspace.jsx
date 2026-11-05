@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
+import CoachPanel from '@/components/coach/CoachPanel';
 import ProblemDescription from '@/components/description/ProblemDescription';
 import EditorPane from '@/components/editor/EditorPane';
 import FileExplorer from '@/components/explorer/FileExplorer';
@@ -25,9 +26,10 @@ import styles from './Workspace.module.css';
 const PREVIEW_RELOAD_DELAY_MS = 1200;
 
 const LEFT_TABS = [
-  { id: 'description', label: 'Description', icon: 'description', iconColor: 'var(--icon-blue)' },
-  { id: 'explorer', label: 'Explorer', icon: 'files', iconColor: 'var(--accent)' },
-  { id: 'submissions', label: 'Submissions', icon: 'history', iconColor: 'var(--icon-blue)' },
+  { id: 'description', label: 'Description', icon: 'description', iconColor: 'var(--icon-blue)', collapsible: true },
+  { id: 'explorer', label: 'Explorer', icon: 'files', iconColor: 'var(--accent)', collapsible: true },
+  { id: 'submissions', label: 'Submissions', icon: 'history', iconColor: 'var(--icon-blue)', collapsible: true },
+  { id: 'coach', label: 'Coach', icon: 'bulb', iconColor: 'var(--accent)' },
 ];
 
 export default function Workspace({ problemId }) {
@@ -64,7 +66,7 @@ function WorkspaceLayout({ problem, session, restart, restarting, resetProblem }
   const fileTree = useFileTree(session.id);
   const editor = useOpenFiles(session.id);
 
-  const left = useResizable({ initial: 340, min: 240, max: 560, axis: 'x' });
+  const left = useResizable({ initial: 340, min: 300, max: 560, axis: 'x' });
   const preview = useResizable({ initial: 440, min: 300, max: 900, axis: 'x', reverse: true });
   const panel = useResizable({ initial: 250, min: 120, max: 600, axis: 'y', reverse: true });
 
@@ -194,6 +196,14 @@ function WorkspaceLayout({ problem, session, restart, restarting, resetProblem }
                 <SubmissionList problemId={problem.id} refreshKey={submissionsVersion} />
               </div>
             )}
+            <div className={styles.view} hidden={leftTab !== 'coach'}>
+              <CoachPanel
+                sessionId={session.id}
+                problemId={problem.id}
+                activeFile={editor.activePath}
+                beforeAsk={editor.saveAll}
+              />
+            </div>
           </div>
         </aside>
 

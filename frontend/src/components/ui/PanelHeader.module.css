@@ -7,6 +7,13 @@
   padding: 0 6px 0 4px;
   background: var(--surface-header);
   border-radius: var(--radius) var(--radius) 0 0;
+  container-type: inline-size;
+}
+
+@container (max-width: 450px) {
+  .tab:not(.active) .collapsible {
+    display: none;
+  }
 }
 
 .tabs {
