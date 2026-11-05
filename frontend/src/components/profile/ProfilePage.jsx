@@ -54,7 +54,7 @@ export default function ProfilePage({ username }) {
       <ProfileSidebar profile={profile} onEdit={() => setEditing(true)} />
 
       <div className={styles.main}>
-        <ScoreCard stats={profile.stats} history={profile.scoreHistory} />
+        <ScoreCard stats={profile.stats} />
         <div className={styles.twoColumns}>
           <SolvedCard stats={profile.stats} />
           <BadgesCard badges={profile.badges} />

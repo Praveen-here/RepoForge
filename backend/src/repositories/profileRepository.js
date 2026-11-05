@@ -51,7 +51,7 @@ export async function getSolvedByFramework(userId) {
   return rows;
 }
 
-/** Every solved problem in the order it was solved (for the score history and badges). */
+/** Every solved problem in the order it was solved (for badges and recent solves). */
 export async function listSolved(userId) {
   const { rows } = await pool.query(
     `SELECT p.slug, p.number, p.title, p.difficulty, p.framework, us.solved_at, us.first_try, us.points

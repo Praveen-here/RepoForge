@@ -89,12 +89,6 @@ export async function getProfile(username, viewerId) {
   const yearStart = Math.floor(Date.now() / DAY_MS) - 364;
   const lastYear = days.filter((d) => dayNumber(d.day) >= yearStart);
 
-  let running = 0;
-  const scoreHistory = solved.map((s) => {
-    running += Math.round(s.points * (s.first_try ? 1.2 : 1));
-    return { date: s.solved_at, score: running };
-  });
-
   const difficulty = Object.fromEntries(
     DIFFICULTIES.map((name) => {
       const row = byDifficulty.find((r) => r.difficulty === name);
@@ -122,7 +116,6 @@ export async function getProfile(username, viewerId) {
       maxStreak,
       currentStreak,
     },
-    scoreHistory,
     recentAccepted: [...solved]
       .reverse()
       .slice(0, 10)
@@ -140,9 +133,16 @@ export async function updateMyProfile(user, { name, username }) {
   if (!USERNAME_PATTERN.test(cleanUsername)) {
     throw new HttpError(400, 'Username must be 3-20 characters: lowercase letters, numbers, "-" or "_"');
   }
+  const taken = new HttpError(409, 'Username already exists. Please choose another one.');
   if (cleanUsername !== user.username && (await usernameTaken(cleanUsername))) {
-    throw new HttpError(409, 'That username is already taken');
+    throw taken;
   }
 
-  return toPublicUser(await updateProfile(user.id, { name: cleanName, username: cleanUsername }));
+  try {
+    return toPublicUser(await updateProfile(user.id, { name: cleanName, username: cleanUsername }));
+  } catch (error) {
+    // Someone else took the name between the check above and this update.
+    if (error.code === '23505') throw taken;
+    throw error;
+  }
 }

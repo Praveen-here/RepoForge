@@ -11,30 +11,29 @@ function level(count) {
   return 4;
 }
 
-/** One column per week (Sun..Sat) for the past year, ending today (UTC days). */
-function buildWeeks(counts) {
+/** The past 365 days, ending today (UTC days), grouped into calendar months. */
+function buildMonths(counts) {
   const today = Math.floor(Date.now() / DAY_MS);
-  let start = today - 364;
-  start -= new Date(start * DAY_MS).getUTCDay(); // back to Sunday
+  const months = [];
 
-  const weeks = [];
-  for (let day = start; day <= today; day += 7) {
-    const week = [];
-    for (let i = 0; i < 7; i += 1) {
-      const n = day + i;
-      if (n > today) break;
-      const date = new Date(n * DAY_MS);
-      const key = date.toISOString().slice(0, 10);
-      week.push({ key, date, count: counts.get(key) || 0 });
+  for (let n = today - 364; n <= today; n += 1) {
+    const date = new Date(n * DAY_MS);
+    const key = date.toISOString().slice(0, 10);
+    const monthKey = key.slice(0, 7);
+
+    let month = months[months.length - 1];
+    if (month?.key !== monthKey) {
+      month = { key: monthKey, label: MONTHS[date.getUTCMonth()], days: [] };
+      months.push(month);
     }
-    weeks.push(week);
+    month.days.push({ key, date, count: counts.get(key) || 0 });
   }
-  return weeks;
+  return months;
 }
 
 export default function ActivityHeatmap({ calendar }) {
   const counts = new Map(calendar.days.map((d) => [d.day, d.count]));
-  const weeks = buildWeeks(counts);
+  const months = buildMonths(counts);
 
   return (
     <section className={`${styles.card} ${styles.heatmapCard}`}>
@@ -58,17 +57,16 @@ export default function ActivityHeatmap({ calendar }) {
 
       <div className={styles.heatmapScroll}>
         <div className={styles.heatmap}>
-          {weeks.map((week, i) => {
-            const firstOfMonth = week.find((d) => d.date.getUTCDate() === 1);
-            return (
-              <div key={week[0].key} className={styles.week}>
-                <span className={styles.month}>
-                  {firstOfMonth || i === 0 ? MONTHS[(firstOfMonth || week[0]).date.getUTCMonth()] : ''}
-                </span>
-                {week.map((d) => (
+          {months.map((month) => (
+            <div key={month.key} className={styles.monthBlock}>
+              <div className={styles.monthGrid}>
+                {month.days.map((d) => (
                   <span
                     key={d.key}
                     className={`${styles.cell} ${styles[`level${level(d.count)}`]}`}
+                    // Row 1 is Sunday, so each day sits on its weekday and a month's first
+                    // and last columns can be partly empty.
+                    style={{ gridRow: d.date.getUTCDay() + 1 }}
                     title={`${d.count} submission${d.count === 1 ? '' : 's'} on ${d.date.toLocaleDateString(undefined, {
                       timeZone: 'UTC',
                       month: 'short',
@@ -78,8 +76,9 @@ export default function ActivityHeatmap({ calendar }) {
                   />
                 ))}
               </div>
-            );
-          })}
+              <span className={styles.monthLabel}>{month.label}</span>
+            </div>
+          ))}
         </div>
       </div>
 
